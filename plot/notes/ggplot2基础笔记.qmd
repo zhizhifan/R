@@ -1,0 +1,1271 @@
+---
+title: ggplot2笔记
+jupyter: ir
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# 基础知识
+
+ggplot2语法可以划分成以下几个部分：
+- 数据集（data）：这部分包括了数据集的清洗整理，不再赘述。
+- 图像属性（aes）
+- 映射（mapping）：各种图像属性的空间映射。
+- 几何对象（geom）：决定了图形的类型
+- 标度（scale）：对数据信息进行重新汇总计算。
+- 统计变换（stats）
+- 位置变换（position）
+- 坐标系（coord）
+- 分面（facet）
+- 主题（theme）：对图形精雕细琢。
+
+## 图层
+
+ggplot2通过添加图层的方法来绘制想要的结果，每一个图层需要组合相应的图形对象。图层之间用`+`连接。
+
+### 图层语法
+
+基础的图层构筑如下：
+1. 一个默认数据集和**变量到图形属性的映射**。
+2. 一个或多个图层，每个图层都由一种几何对象，一种种统计变换和一种位置调整组成。
+3. 标度，每个图形属性映射都对应一个标度。
+4. 一个坐标系统。
+5. 分面设定。
+6. 一个主题设定。
+
+## 图形属性（美学属性）
+
+每一个图形属性都可以映射为一个变量（离散或连续）或者单独设定成一个常数。图形属性不进行显式声明则使用默认值。
+
+### 常用图形属性类型
+
+不同的几何对象有不同的图形属性，常见的有：
+1. color（colour）：线条颜色
+2. size
+3. shape
+4. fill：填充颜色
+5. group
+6. x，y：坐标位置
+
+## 绘图步骤
+
+1. 创建ggplot2对象
+
+通过`ggplot()`函数创建，该函数有两个主要参数，`data`和`mapping`，这两个参数将被设置为全局的默认参数。只有在新添加图层里重新显示声明，才会被改变。
+
+ggplot2对象在加上图层前没有任何几何图形，只是空白的坐标轴面板。
+
+2. 添加图层
+
+使用`geom_xx()`函数添加几何对象图层，函数的参数定义了各种组件：
+- mapping：映射。
+- data
+- `...`：几何对象中特有的其他参数，包括一些美学属性或其他设置。
+- stat：统计变换。
+- position：位置调整。
+
+### 几点注意
+
+1. 美学属性单独赋值和映射的区别。
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(patchwork)
+p1 <- mpg %>% ggplot(aes(displ, hwy)) + geom_point(size = 3, aes(colour="red"))  
+p2 <- mpg %>% ggplot(aes(displ, hwy)) + geom_point(size = 3, colour="red") 
+p1 + p2
+```
+
+## 几何对象
+
+几何对象执行图层的渲染，控制生成图像的类型。
+
+### 几何对象类型
+
+![](笔记图片素材\几何对象类型.png)
+
+### 几何对象图形属性值和统计变换
+
+-   每一个几何对象都有一组他能识别的图形属性和一组绘图所需要的值。
+-   每一个几何对象都有一个统计变换，且每一个统计变换都有一个默认的几何对象。
+
+![](笔记图片素材\几何对象详解.png)
+
+### 分组
+
+一般几何对象可以分为个体几何对象和群组几何对象两类。个体几何对象对数据框的每一条数据绘制一个以区别于其他个体的图形对象，例如散点。群组几何对象用来表示多条观测。它们可以是某个统计摘要的一个结果，或者是几何对象的基础展示，例如多边形。
+
+线条和路径这种几何对象介于这两者之间：每条线都由许多线段组成，而每条线段又代表两个点。此时需要映射分组group图形属性来解决这种冲突。因为在ggplot2中，group属性用于指定数据点的分组方式。它在绘制具有多个组的数据时非常有用，尤其是在绘制线图（line
+plot）或区域图（area plot）时。
+
+```{r}
+#| vscode: {languageId: r}
+# 一下是一段代码示例
+library(ggplot2)
+library(nlme) # 调用nlme包的Oxboys数据集
+Oxboys # 数据集的age列存在相同的数据
+```
+
+```{r}
+#| vscode: {languageId: r}
+# 如果不指定分组图形属性， 那么绘制出来的线只是点的单纯连接，没有实际意义
+ggplot(Oxboys, aes(age, height)) + geom_line(linewidth = 1) 
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(Oxboys, aes(age, height, group = Subject)) + geom_line(linewidth = 1) 
+```
+
+有时需要设置 group = 1来连接相应的散点绘制折线图
+
+```{r}
+#| vscode: {languageId: r}
+library(ggplot2)
+library(xlsx)
+data <- xlsx::read.xlsx("笔记数据素材/基尼系数贡献率.xlsx", sheetIndex = 1, header = TRUE)
+head(data)
+ggplot(data, aes(x = category)) +
+    geom_line(aes(y = as.factor(Gw), color = "Gw"), linewidth = 2)
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data, aes(x = category)) +
+    geom_line(aes(y = as.factor(Gw), group = 1, color = "Gw"), linewidth = 2)
+```
+
+## 统计变换
+
+> 对数据进行统计变换，通常以某种方式对数据信息进行汇总。统计变换将输入的数据集看做输入，将返回的数据集作为输出，**此统计变换可以向原数据集中插入新的变量，返回一个包含新变量的数据集,这些新生成的变量可以被直接调用。**
+
+![](笔记图片素材\统计变换.png)
+
+### 统计变换与标度变换
+
+> 标度变换先于统计变换，因此统计量都是基于标度变换后的数据进行计算的。
+
+```{r}
+#| vscode: {languageId: r}
+# 直方图默认将条形的高度赋值为观测值的频数(count)。
+library(ggplot2)
+
+p1 <- ggplot(diamonds, aes(x = carat)) +
+        geom_histogram()    # 纵坐标值为count
+p1
+
+p2 <- ggplot(diamonds, aes(x = carat)) +
+        geom_histogram(aes(y = after_stat(density)))    # 改变纵坐标值为density
+p2
+
+p3 <- ggplot(diamonds, aes(x = carat)) +
+        geom_histogram(stat = "density")
+p3
+
+p4 <- ggplot(diamonds, aes(x = carat)) +
+        geom_density()
+p4
+```
+
+## 位置调整
+
+> 位置调整即是对该层的元素位置进行微调。一般用于处理离散型数据，这是要因为连续型数据很少出现完全重叠的问题
+
+![](笔记图片素材\位置调整参数.png)
+
+```{r}
+#| vscode: {languageId: r}
+# 以下是一段代码示例
+library(ggplot2)
+
+p1 <- ggplot(diamonds, aes(x = color, fill = cut)) +
+        geom_bar(position = "dodge") +
+        labs(title = "并列")
+p1
+
+p2 <- ggplot(diamonds, aes(x = color, fill = cut)) +
+        geom_bar(position = "stack") +
+        labs(title = "堆叠")
+p2
+
+p3 <- ggplot(diamonds, aes(x = color, fill = cut)) +
+        geom_bar(position = "fill") +
+        labs(title = "堆叠并将高度标准化")
+p3
+```
+
+## 标度
+
+> 控制着数据到图形属性的映射，图形上所用的每一个图形属性都需要一个标度，也都对应着一个标度，每个标度都作用于图形中的所有数据。*更准确地说，每一种标度都是从数据空间的某个区域（标度的定义域）到图形属性空间的某个区域（标度的值域）的一个函数。定义域和值域可以是连续型、离散型。*
+
+执行标度的过程有三步： 1.
+变换(transformation):**仅针对连续型的定义域**，
+例如对数据取对数或者开根号。在变换完成后，将会基于变换后的数据计算每一层的统计摘要，然后再进行展示。
+2.
+训练(training):在这个关键的阶段，将通过学习(learing)得到标度的定义域：要么是确定某个(变换后的)连续型变量的最小值和最大值，要么是列出某个类别型变量的所有水平。
+3.
+映射(mapping):在知道标度的定义域和值域后，将执行这个映射数据到图形属性的函数。
+
+标度的分类: 1.
+位置标度：将连续型，离散型和日期-时间型变量映射到绘图区域，以及构造相应的坐标轴。
+2. 颜色标度：将连续型和离散型变量映射到颜色。 3.
+手动标度：将离散型变量映射到我们选择的符号大小、线条类型、形状或颜色，以及创建对应的图例。
+4.
+同一型标度，用于直接将变量值绘制为图形属性，而不去映射它们。举例来说，假设我们想要将变量映射为符号的颜色，而此变量本身就是一个由颜色值组成的向量，那么我们就无须再将其映射为其他的颜色，直接渲染这些值本身即可。
+
+### 标度的用法
+
+每一种图形属性都拥有一个默认的标度，此标度将在我们每次使用这个图形属性时被自动添加到图形中。标度分为连续型(变量为数值时)或离散型(变量为因子、逻辑值、字符时)。
+在初始化整个图形和增加新图层时、默认的标度将自动增加。这意味着如果我们在之后修改了底层数据或图形属性映射，变量类型和标度类型之间可能出现不匹配的情况。当这种情况发生时，我们需要自行添加正确的标度。不过新版本的ggplot2可以自动完成变换。不过了解一下底层原理总是好的。
+
+![](笔记图片素材\标度类型.png)
+
+如果要添加一个不同的标度或修改默认标度的某些特征，我们必须构造一个新的标度，然后使用`+`将其添加到图形上。通过通用命名方案：`scale_`开头，加上图形属性名称，最后以标度名称结尾。
+
+### 标度的通用参数
+
+1.  name:设置相应的标题。该参数可以直接通过labs()一次性写完。
+
+``` r
+labs(x = "",y = '',title = "", subtitle = "", tag = "", caption = "", color = "", size = "")   
+# title:标题标签
+# subtitle:子标题标签
+# tag标签默认在图的左上角
+# caption标签默认在图的右下角
+# 图形属性：如x,y设置坐标轴标题，如果映射color属性，设置color可以改变图例标题
+```
+
+2.  limits:固定标度的定义域。连续型标度接受一个**长度为2的数值型向量**；离散型标度接受一个**字符型向量**。一旦接受了limits，数据将不再进行任何训练。即任何不在此limits规定的定义域内的值均将被丢弃。这个丢弃过程是在统计量计算之前的，这点值得注意。
+
+由于经常需要微调这些标签．所以也可以使用辅助函数`xlim()`,`ylim()`
+
+``` r
+ylim(10,20)
+scale_y_continuous(limits = c(10, 20))   #一个连续型标度
+
+xlim("a", "b"，"c")
+scale_x_discrete(limits = c("a", "b", "c"))  #一个离散型标度
+
+xlim(as.Date(c("2008-05-01", "2008-08-01")))      #一个从2008年5月1日到8月1日的日期型标度。
+```
+
+3.  breaks和labels：breaks控制着显示在坐标轴或图例上的值，即坐标轴上应该显示哪些刻度线的值，或连续型标度在一个图例中将被如何分段。而labels则指定了断点处(刻度值处)显示的标签。
+
+-   设置了labels就必须指定breaks，只有这样才能保证这两个参数的正确匹配。当然也可以只设置breaks而不设置labels。
+
+-   值得注意的是，ggplot2在进行绘图时会对变量的定义域进行一定程度的扩展，这样使得图像不至于落在边缘。而当我们在设置breaks参数时，不应该超出变量定义域太多，否则即使设置了也无法显现出来。解决方法是使用expand参数对坐标轴进行一定程度的扩展。
+
+``` r
+scale_x_continuous(breaks = c(0.1, 0.2, 0.3), expand = c(x, y))
+# 其中x为下限的扩展程度，y为上限地扩展程度。x，y的值表示x或y坐标轴扩展的百分比值两者都是百分数。
+```
+
+### 位置标度
+
+#### 连续型
+
+最常用的连续型位置标度是`scale_x_continuous()`和`scale_y_continuous()`。
+
+而最有趣的变式是通过变换来形成的。每个连续型标度均可接受一个trans参数，允许指定若干种线性或非线性的变换。而每一种变换都是由所谓的"变换器"(transformer)来实现的，变换器描述了变换本身和对应的逆变换，以及如何去绘制标签。
+
+![](笔记图片素材\标度转换器.png)
+
+变换通常被用来修改位置标度，所以对于x,y标度都是有简便写法的：scale_x_log1O()scale_x_continuous(trans=
+"logl0")是等价的。参数trans对任意的连续型标度均有效，包括后面的颜色梯度，但简便写法仅针对位过标度存在。变换器同样也可以使用在coord_trans()中，此时变换将在统计量计算完成后进行，因而会影响图形主体的外观。
+
+```{r}
+#| vscode: {languageId: r}
+library(ggplot2)
+p1 <- ggplot(diamonds, aes(x = log10(carat), y = log10(price))) + geom_point()
+p1
+
+p2 <- ggplot(diamonds,aes(x = carat, y = price)) + geom_point() + scale_x_log10() + scale_y_log10()
+p2
+
+p3 <- ggplot(diamonds,aes(x = carat, y = price)) + geom_point()
+p3
+
+# 三张图存在差异，其中一二张图虽然相同，但坐标轴的刻度却是不同的。第一种做法改变了原数据空间，因而坐标轴的刻度也发生了变换。而第二种做法虽然也对数据进行了转换，但坐标轴的刻度仍采用原数据的。
+```
+
+#### 日期和时间型
+
+我们常常在绘制时间序列图时，用到日期和时间。日期和时间值基本上属于连续型，但在标注坐标轴时有特殊的处理方式。如果日期和时间值是其他格式的，则需使用as.Date()或as.POSIXct()对其进行转换。
+
+对于日期坐标轴，此标度`scale_x_date()`,
+`scale_y_date()`本身已经可以很好地选择默认值了，不过也可以进行微调，一般用到几个参数控制其外观和刻度的位置： -
+`name`: 坐标轴名称 - `date_breaks`: x轴上的日期刻度 - `date_labels`:
+日期标签格式 - `limits`: 坐标轴日期范围 - `expand`: 坐标轴轴刻度扩展因子
+
+其中有些已经在前面讲过，不再赘述。以下是一些参数讲解：
+
+`date_breaks`参数常见设置形式：
+
+`date_breaks = "width"`：根据时间间隔来设置日期刻度，即每个刻度之间的时间间隔为固定宽度。
+
+``` r
+scale_x_date(date_breaks = "1 day")
+# 表示每天显示一个日期刻度。
+
+scale_x_date(date_breaks = "2 years")
+# 表示每两年显示一个日期刻度。
+```
+
+`date_labels`参数常见设置形式：
+
+1.  date_labels = ""：使用给定的日期格式字符串显示日期标签
+
+``` r
+scale_x_date(date_labels = "%Y-%m-%d")
+# 表示显示日期格式为"年-月-日"。
+
+scale_x_date(date_labels = "%Y/%m/%d")
+# 表示显示日期格式为"年/月/日"。
+```
+
+![](笔记图片素材\日期标签格式.png)
+
+```{r}
+#| vscode: {languageId: r}
+# 以下是一段代码示例
+library(ggplot2)
+
+# 创建一个时间序列数据集
+data <- data.frame(
+    time = seq(as.Date("2020-01-01"), as.Date("2020-12-31"), by = "1 day"), # 用seq创建时间序列
+    value = rnorm(366)
+)
+head(data)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# 绘制折线图
+ggplot(data, aes(x = time, y = value)) +
+    geom_line() +
+    scale_x_date(
+        limits = c(as.Date("2020-02-01"), as.Date("2020-11-30")),
+        date_breaks = ("1 month"),
+        date_labels = "%b",
+        expand = c(0.02, 0)
+    ) +
+    labs(title = "2020年每日数据趋势", x = "日期", y = "数值")
+```
+
+#### 离散型
+
+离散型位置标度`scale_x_discrete()`,
+`scale_y_discrete()`将输入中的各水平映射为整数。结果的顺序可用参数breaks进行控制，不想要的水平可以使用limits(或使用xlim()或ylim())进行丢弃。
+
+有时候将离散型变量映射到位置标度时顺序会发生变化，解决方案如下:
+
+``` r
+scale_x_discrete(limits = unique()) # unique括号里面添加列名
+```
+
+### 颜色标度
+
+#### 连续型
+
+常见的连续型颜色标度
+
+``` r
+scale_colour_gradient()和scale_fill_gradient() 
+#双色梯度。顺序为从低到高。参数low和high用以控制此梯度两端的颜色。
+
+scale_colour_gradient2()和scale_fill_gradient2 ()
+#三色梯度。顺序为低一中一高。参数low和high作用同上，这两种标度还在中点处拥有一个中间色。中点的默认值为0，也可以使用参数midpoint将其设置为任意值。
+
+scale_colour_gradientn()和scale_fill_gradientn()
+#自定义的n色梯度。此标度需要赋给参数colours一个颜色向量。不加其他参数的话，这些颜色将依照数据的范围均匀地分布。
+```
+
+#### 离散型
+
+离散型数据有两种颜色标度。一种可以自动选择颜色，另一种可以轻松地从手工甄选的颜色集中选择颜色。默认的配色方案，即scale_colour_hue(),可通过沿若hcl色轮选取均匀分布的色相来生成颜色。这种方案对多至约8种颜色时都能有较好的效果。但对于更多的颜色，要区分开不同的颜色就变得比较困难了。默认配色的另外一个缺点是，由于所有颜色都拥有相同的明度和彩度，所以当我们进行黑白打印时，它们就会成为几近相同的灰影。除了这种基于计算的方案以外，另一种可选的方案是使用ColorBrewer配色，这些手工甄选的颜色可在很多情境下良好地运作(如绘制地图)，这些颜色也因此在展示较大的面积时表现更佳。
+
+对于类别型数据中的点而言，常用的调色板是"Set1"和"Dack2",对面积而言则是"Set2"、"Pastel1"、"Pastel2"和"Accent"。
+
+``` r
+scale_color_brewer(palette = 'Set2')
+```
+
+##### 手动离散型标度
+
+使用`scale_colour_manual()`这个手动型标度创建新的标度。手动型标度拥有一个重要参数values。可以使用它来指定这个标度应该生成的值。如果这个向量中的元素是有名称的，则它将自动匹配输入和输出的值，否则它将按照离散型变量中水平的先后次序进行匹配。
+
+``` r
+library(ggplot2)
+ggplot(msleep, aes(x = brainwt, y = bodywt))+
+         geom_point(aes(color = vore))+
+         scale_x_log10()+
+         scale_y_log10()+
+         scale_color_manual(values = c(carni = 'red', 'NA' = 'orange', insecti = 'yellow', herbi = 'green', omni = 'blue'))
+
+# 该向量中的元素是有名称的，于是自动匹配了输入和输出的值：carni将使用红色等等
+
+library(ggplot2)
+ggplot(msleep, aes(x = brainwt, y = bodywt))+
+         geom_point(aes(color = vore))+
+         scale_x_log10()+
+         scale_y_log10()+
+         scale_color_manual(values = c('red', 'orange', 'yellow', 'green', 'blue'))
+
+# 按照离散型变量中水平的先后次序进行匹配(此时也要保证该向量元素的数量与类别变量的数量相匹配)
+```
+
+## 添加额外元素
+
+添加额外的元数据(metadata)
+、上下文信息和注解等等。该图层往往是最后绘制的图层。
+
+### 添加图形注释
+
+1.  geom_text()：为图形添加文字叙述或者为点添加标签
+
+2.  geom_vline, geom_hline: 为图形添加辅助线
+
+参数详解： - `xintercept` 或 `yintercept`：用于指定参考线的位置
+
+-   `color`：用于指定参考线的颜色。
+
+-   `linetype`：用于指定参考线的线型，可以是
+    "solid"（实线）、"dashed"（虚线）、"dotted"（点线）、"dotdash"（点划线）或者其他
+    ggplot2 中预定义的线型。
+
+-   `linewidth`：用于指定参考线的粗细程度。
+
+-   `alpha`：用于指定参考线的透明度。
+
+3.  geom_abline：向图形添加任意斜率和截距的直线
+
+-   最主要的参数就是`intercept`和`slope`。`color`,
+    `linetype`和`linewidth`等参数不再详细展开。
+-   参数`slope`表示斜率。`intercept`表示截距，若指定为0，且`slope`未进行声明，则默认斜率为1
+
+5.  geom_rect:
+
+-   需要指定矩形的四个角的坐标，通过 `xmin`、`xma`x`、`ymin`和`ymax\`
+    参数来指定。
+-   还可以使用 `fill` 参数来填充矩形的颜色，使用 `alpha`
+    参数来指定矩形的透明度，使用 `color`参数来指定矩形的边框颜色。
+
+6.  arrow()添加箭头
+
+geom_line, geom_path,
+geom_segment都可以使用arrow参数在线上放置箭头,用arrow()函数绘制箭头，它有如下参数：
+
+-   length: 箭头的长度，需要`unit(长度， 单位)`的格式。
+
+-   ends: 箭头的位置，可取值为 "last"（默认，箭头在线段终点处）或
+    "first"（箭头在线段起点处）。
+
+-   type: 箭头的类型，可取值为 "open"（默认，空心箭头）或
+    "closed"（实心箭头）。
+
+-   angle: 箭头的夹角，以度数为单位，默认为 30 度。
+
+*箭头的颜色和线的颜色保持一致*
+
+``` r
+geom_line(color = 'red', arrow = arrow(length = unit(0.1,'inches'),type = 'closed', ends = 'first'))
+```
+
+## 图例
+
+### 定义
+
+图例和坐标轴存在着天然的可比性。图例标题(legend title)和坐标轴标题(axis
+label)是等价的。图例标示(legend key)和刻度标签(tick
+label)皆由标度的断点(break)决定。要绘制图例，图形必须收集每一种图形属性(如颜色，大小，形状)的使用信息，一般就是收集颜色属性。该信息为何种数据以及为何种几何对象决定了图例的绘制。标度的断点用来确定图例标示的值。
+
+以收集颜色属性的数据信息为例，如果该数据为离散型的，那么断点就是所有离散数据的值。使用的对应的一系列几何对象则被用来确定如何绘制这些标示。
+
+![](笔记图片素材\生成图例类型.png)
+
+如果该数据为连续型的，此时仍然按照断点来确定图例的值，只不过结果会是一个渐变的色条。断点可以自行设置。
+
+### 图例的调整------利用theme主题
+
+1.  图例的位置和对齐
+
+使用`theme(legend.position = )`设置。其值可为`right`, `left`, `top`,
+`bottom`,
+`none (不加图例)`。或者是一个表示位置的数值。这个数值型位置由`legend.justification`给定的相对边角位置表示（取0，1之间的值），它是一个长度为2的数值型向量：右上角为c(1，1)
+, 左下角为c(0, 0)。可以自行调整，如：
+
+``` r
+theme(legend.position = c(0.9, 0.9))
+```
+
+2.  图例标题
+
+``` r
+# 标题的命名，寻找映射的图形属性，一般是颜色属性，所以这样设置即可改变图例标题
+labs(color = "")
+labs(size = "")
+
+# 设置图例标题大小，一般设置为和坐标轴标题一样的大小
+theme(legend.title = element_text(size = 16))
+
+# 设置图例标题位置居中，一般不设置
+theme(legend.title.align = 0.5)
+```
+
+3.  图例标签
+
+``` r
+# 设置标签大小，可自行调整细节
+theme(legend.text = element_text(size = 12))
+
+# 调整图例标签的位置，设置为0.5即为居中
+theme(legend.text.align = 0.5)
+```
+
+4.  图例背景
+
+``` r
+# 设置图例背景为白底黑边，一般不设置
+theme(legend.background = element_rect(fill = "white", color = "black"))
+```
+
+5.  图例标示
+
+``` r
+# 设置图例标示的背景为白底
+theme(legend.key = element_rect(fill = "white"))
+
+# 设置图例标示的高度和宽度，可以变相改变整个图例区域的大小，等号后面为 unit（x，单位）的形式
+theme(legend.key.height = unit(1.5, "mm"))
+theme(legend.key.width = unit(1.2, "cm"))
+```
+
+#### 关于geom_text()的详解
+
+几个参数：
+
+1.  mapping：用于映射数据中的变量到文本标签中的不同图形属性，例如位置、颜色、大小等。(x,
+    y数据的映射可以采用默认在或者重新声明)
+
+2.  label：用于指定文本标签的文本内容。
+
+3.  hjust, vjust：用于控制文本标签相对于其位置的水平和垂直对齐方式。
+
+4.  size：用于指定文本标签的大小。
+
+5.  color：用于指定文本标签的颜色。
+
+6.  angle：用于指定文本标签的旋转角度。
+
+7.  fontface：用于指定文本标签的字体类型（例如粗体、斜体等）。
+
+``` r
+geom_text(aes(x = , y = , label = ), size = , color = , fontface = )
+# fontface 指的是字体样式，如"plain"、"italic"、"bold" 和 "bold.italic"
+```
+
+==此外，标签之间可能会出现重合==。此时可以使用`ggrepel`包的`geom_text_repel()`函数来解决问题
+
+该函数有很多参数，可以自行查阅，但基础的部分和geom_text()是类似的。里面的max.overlaps参数用于控制标签之间的最大重叠数，如果同一位置有超过这个最大值的标签发生了重叠，那么多余的标签将被省略。可以尝试增加
+max.overlaps
+参数的值，以允许更多的标签重叠。但是要注意，如果重叠的标签过多，可能会导致标签之间的可读性降低，因此应该在可读性和美观性之间做出权衡。
+
+## 保存
+
+对于ggplot2对象，可以用`ggsave()`函数保存，同时该函数有多个参数对保存设置进行调整。使用`?ggplot2::ggsave()`阅读使用文档。常用的参数：`filename`指定保存图片的名称地址；`plot`指定ggplot2对象，默认为`plot=last_plot()`；`dpi`指定保存的分辨率，特别是当使用了`showtext`包后，为保持字体大小不会缩放，指定`dpi=90`。
+
+```{r}
+library(tidyverse)
+library(showtext)
+
+showtext_auto()
+font_path <- "fonts/ChillDuanSans_Medium.otf"
+font_add("hanchan", font_path)
+
+mpg %>% 
+  ggplot(aes(x = displ, y = cty)) +
+  geom_point(size = 3, color = "#FA8072") +
+  geom_smooth(method = lm, se = FALSE, color = "#D8BFD8", lwd = 1.5) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "hanchan")
+  ) 
+
+ggsave(filename = "output_img/ggsave_demo.png", plot = last_plot(), dpi = 90)
+```
+
+# 进阶知识
+
+# 实战
+
+
+
+
+```{r}
+#| vscode: {languageId: r}
+data <- data[, 2:ncol(data)]
+head(data)
+```
+
+```{r}
+#| vscode: {languageId: r}
+corr <- cor(data)
+head(corr)
+```
+
+```{r}
+#| vscode: {languageId: r}
+library(xlsx)
+df <- read.xlsx("ggplot2素材/data.xlsx", header = TRUE, sheetIndex = 1)
+head(df)
+```
+
+```{r}
+#| vscode: {languageId: r}
+library(sf)
+library(ggplot2)
+library(xlsx)
+library(tidyverse)
+library(viridis)
+library(ggspatial)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# 读取省份边界的shapefile文件
+province_geo <- read_sf("ggplot2绘制地图数据/省份边界数据/中华人民共和国.shp")
+```
+
+```{r}
+#| vscode: {languageId: r}
+class(province_geo)
+```
+
+```{r}
+#| vscode: {languageId: r}
+tail(province_geo)
+```
+
+```{r}
+#| vscode: {languageId: r}
+data1 <- read.xlsx("C:/Users/lenovo/Desktop/整合后数据.xlsx", sheetIndex = 1, header = TRUE)
+head(data1)
+```
+
+```{r}
+#| vscode: {languageId: r}
+values_2015 <- data1[, c(1, 7)]
+head(values_2015)
+```
+
+```{r}
+#| vscode: {languageId: r}
+countryvalues_2015<- left_join(province_geo, values_2015, by = c("name" = "province"))
+```
+
+```{r}
+#| vscode: {languageId: r}
+tail(countryvalues_2015)
+```
+
+```{r}
+#| vscode: {languageId: r}
+breaks <- seq(0, 1, by = 0.1)
+labs <- c("极度失调", "严重失调", "中度失调", "轻度失调", "濒临失调", "勉强协调", "初级协调", "中级协调", "良好协调", "优质协调")
+countryvalues_2015$cat <- cut(countryvalues_2015$num, 
+                            breaks = breaks,
+                            labels = labs,
+                            include.lowest = TRUE
+                            )
+countryvalues_2015
+```
+
+```{r}
+#| vscode: {languageId: r}
+st_crs(countryvalues_2015)
+```
+
+```{r}
+#| vscode: {languageId: r}
+lake_geo <- read_sf("ggplot2绘制地图数据/湖泊河流数据/hyd1_4p.shp", crs = "EPSG:4326")
+head(lake_geo)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# 如何简化代码？
+test1 <- read_sf("ggplot2绘制地图数据/市边界数据/110000.shp")
+test2 <- read_sf("ggplot2绘制地图数据/市边界数据/120000.shp")
+test3 <- read_sf("ggplot2绘制地图数据/市边界数据/130000.shp")
+test4 <- read_sf("ggplot2绘制地图数据/市边界数据/140000.shp")
+test5 <- read_sf("ggplot2绘制地图数据/市边界数据/140000.shp")
+test6 <- read_sf("ggplot2绘制地图数据/市边界数据/150000.shp")
+test7 <- read_sf("ggplot2绘制地图数据/市边界数据/210000.shp")
+test8 <- read_sf("ggplot2绘制地图数据/市边界数据/220000.shp")
+test9 <- read_sf("ggplot2绘制地图数据/市边界数据/230000.shp")
+test10 <- read_sf("ggplot2绘制地图数据/市边界数据/310000.shp")
+test11 <- read_sf("ggplot2绘制地图数据/市边界数据/320000.shp")
+test12 <- read_sf("ggplot2绘制地图数据/市边界数据/330000.shp")
+test13 <- read_sf("ggplot2绘制地图数据/市边界数据/340000.shp")
+test14 <- read_sf("ggplot2绘制地图数据/市边界数据/350000.shp")
+test15 <- read_sf("ggplot2绘制地图数据/市边界数据/360000.shp")
+test16 <- read_sf("ggplot2绘制地图数据/市边界数据/370000.shp")
+test17 <- read_sf("ggplot2绘制地图数据/市边界数据/410000.shp")
+test18 <- read_sf("ggplot2绘制地图数据/市边界数据/420000.shp")
+test19 <- read_sf("ggplot2绘制地图数据/市边界数据/430000.shp")
+test20 <- read_sf("ggplot2绘制地图数据/市边界数据/440000.shp")
+test21 <- read_sf("ggplot2绘制地图数据/市边界数据/450000.shp")
+test22 <- read_sf("ggplot2绘制地图数据/市边界数据/460000.shp")
+test23 <- read_sf("ggplot2绘制地图数据/市边界数据/500000.shp")
+test24 <- read_sf("ggplot2绘制地图数据/市边界数据/510000.shp")
+test25 <- read_sf("ggplot2绘制地图数据/市边界数据/520000.shp")
+test26 <- read_sf("ggplot2绘制地图数据/市边界数据/530000.shp")
+test27 <- read_sf("ggplot2绘制地图数据/市边界数据/540000.shp")
+test28 <- read_sf("ggplot2绘制地图数据/市边界数据/610000.shp")
+test29 <- read_sf("ggplot2绘制地图数据/市边界数据/620000.shp")
+test30 <- read_sf("ggplot2绘制地图数据/市边界数据/630000.shp")
+test31 <- read_sf("ggplot2绘制地图数据/市边界数据/640000.shp")
+test32 <- read_sf("ggplot2绘制地图数据/市边界数据/650000.shp")
+test33 <- read_sf("ggplot2绘制地图数据/市边界数据/710000.shp")
+test34 <- read_sf("ggplot2绘制地图数据/市边界数据/810000.shp")
+test35 <- read_sf("ggplot2绘制地图数据/市边界数据/820000.shp")
+
+
+# 台湾省没有相应的二级市，所以除了台湾的相关数据如下，存储在rusult
+library(openxlsx)
+result <- rbind(test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11, test12, test13, test14, test15, test16, test17, test18, test19, test20, test21,
+test22, test23, test24, test25, test26, test27, test28, test29, test30, test31, test32, test34, test35)
+output <- as.data.frame(result)
+```
+
+```{r}
+#| vscode: {languageId: r}
+head(output)
+```
+
+```{r}
+#| vscode: {languageId: r}
+head(as.data.frame(test1))
+```
+
+```{r}
+#| vscode: {languageId: r}
+head(as.data.frame(test33))
+```
+
+```{r}
+#| vscode: {languageId: r}
+options(repr.plot.width = 10, repr.plot.height = 10)
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data = countryvalues_2015) + 
+        geom_sf()
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data = countryvalues_2015) + 
+        geom_sf(aes(fill = num),
+                color = "gray75", 
+                linewidth = 1
+                ) + 
+        geom_sf(data = result,
+                color = "white", 
+                fill = "transparent", 
+                linewidth = 0.1) +  
+        geom_sf(data = lake_geo,
+                fill = "#D6F1FF",
+                color = "transparent") +
+        annotation_north_arrow(location="tr",
+                style =north_arrow_nautical(
+                fill =c("grey40","white"),
+                line_col ="grey20"),
+                )+ 
+        scale_fill_viridis(option = "magma",
+                breaks = seq(0, 0.5 , by = 0.05),
+                alpha = 0.7, # 使填充更亮一点
+                begin = 0.1, 
+                end = 0.9,
+                guide = guide_legend(
+                keyheight = unit(5, units = "mm"),
+                title.position = "top",
+                reverse = T)        
+                ) +
+        labs(x = NULL, y = NULL, title = "中国地图", subtitle = "2015年耦合协调度分布", fill = "D") +
+        theme_minimal() +
+        theme(  plot.background = element_blank(),
+                panel.background = element_blank(),
+                panel.border = element_blank(),
+                plot.title = element_text(size = 40, hjust = 0.5),
+                plot.subtitle = element_text(size = 25, hjust = 0.5),
+                axis.text = element_blank(),
+                axis.title = element_blank(),
+                panel.grid = element_blank(),
+                plot.margin = unit(c(1, .5, .2, 0), "cm"),
+                panel.spacing = unit(c(-.1, 0.2, .2, 0.2), "cm"),
+                legend.title = element_text(size = 12),
+                legend.text = element_text(size = 10)
+        )
+```
+
+```{r}
+#| vscode: {languageId: r}
+library(showtext)
+showtext_auto()
+font_add("SimSun", "C:/Windows/Fonts/SIMSUN.TTC")   
+font_families()
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data = countryvalues_2015) + 
+        geom_sf(aes(fill = cat),
+                color = "grey80", 
+                linewidth = 1
+                ) + 
+        geom_sf(data = result,
+                color = "white", 
+                fill = "transparent", 
+                linewidth = 0.5) +  
+        geom_sf(data = lake_geo,
+                fill = "#D6F1FF",
+                color = "transparent") +
+        annotation_north_arrow(location="tr",
+                style =north_arrow_nautical(
+                fill =c("grey40","white"),
+                line_col ="grey20")
+                )+ 
+        scale_fill_viridis_d(option = "magma",
+                alpha = 0.7, # 使填充更亮一点
+                begin = 0.1, 
+                end = 0.8,
+                na.value = "gray30",
+                guide = guide_legend(reverse = T),
+                name = NULL
+                ) +        
+        theme_minimal() +
+        theme(  plot.background = element_blank(),
+                panel.background = element_blank(),
+                panel.border = element_blank(),
+                plot.title = element_text(size = 40, hjust = 0.5),
+                plot.subtitle = element_text(size = 25, hjust = 0.5),
+                axis.text = element_blank(),
+                axis.title = element_blank(),
+                panel.grid = element_blank(),
+                plot.margin = margin(l = 0.5, t = 0.5, r = 0.5, b = 0, "cm"),
+                legend.position = c(0.6,0.2),
+                legend.text = element_text(size =20, family = "SimSun"),
+                legend.margin = margin(0.5, 0.5, 0.5, -5, "cm"),
+        )+
+        guides(fill = guide_legend(direction = "horizontal"))
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data = countryvalues_2018) + 
+        geom_sf(aes(fill = cat),
+                color = "grey80", 
+                linewidth = 1
+                ) + 
+        geom_sf(data = result,
+                color = "white", 
+                fill = "transparent", 
+                linewidth = 0.5) +  
+        geom_sf(data = lake_geo,
+                fill = "#D6F1FF",
+                color = "transparent") +
+        annotation_north_arrow(location="tr",
+                style =north_arrow_nautical(
+                fill =c("grey40","white"),
+                line_col ="grey20")
+                )+ 
+        scale_fill_viridis_d(option = "magma",
+                alpha = 0.7, # 使填充更亮一点
+                begin = 0.1, 
+                end = 0.8,
+                na.value = "gray30",
+                guide = guide_legend(reverse = T),
+                name = NULL
+                ) +        
+        theme_minimal() +
+        theme(  plot.background = element_blank(),
+                panel.background = element_blank(),
+                panel.border = element_blank(),
+                plot.title = element_text(size = 40, hjust = 0.5),
+                plot.subtitle = element_text(size = 25, hjust = 0.5),
+                axis.text = element_blank(),
+                axis.title = element_blank(),
+                panel.grid = element_blank(),
+                plot.margin = margin(l = 0.5, t = 0.5, r = 0.5, b = 0, "cm"),
+                legend.position = c(0.6,0.2),
+                legend.text = element_text(size =20, family = "SimSun"),
+                legend.margin = margin(0.5, 0.5, 0.5, -5, "cm"),
+        )+
+        guides(fill = guide_legend(direction = "horizontal"))
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data = countryvalues_2021) + 
+        geom_sf(aes(fill = cat),
+                color = "grey80", 
+                linewidth = 1
+                ) + 
+        geom_sf(data = result,
+                color = "white", 
+                fill = "transparent", 
+                linewidth = 0.5) +  
+        geom_sf(data = lake_geo,
+                fill = "#D6F1FF",
+                color = "transparent") +
+        annotation_north_arrow(location="tr",
+                style =north_arrow_nautical(
+                fill =c("grey40","white"),
+                line_col ="grey20")
+                )+ 
+        scale_fill_viridis_d(option = "magma",
+                alpha = 0.7, # 使填充更亮一点
+                begin = 0.1, 
+                end = 0.8,
+                na.value = "gray30",
+                guide = guide_legend(reverse = T),
+                name = NULL
+                ) +        
+        theme_minimal() +
+        theme(  plot.background = element_blank(),
+                panel.background = element_blank(),
+                panel.border = element_blank(),
+                plot.title = element_text(size = 40, hjust = 0.5),
+                plot.subtitle = element_text(size = 25, hjust = 0.5),
+                axis.text = element_blank(),
+                axis.title = element_blank(),
+                panel.grid = element_blank(),
+                plot.margin = margin(l = 0.5, t = 0.5, r = 0.5, b = 0, "cm"),
+                legend.position = c(0.6,0.2),
+                legend.text = element_text(size =20, family = "SimSun"),
+                legend.margin = margin(0.5, 0.5, 0.5, -5, "cm"),
+        )+
+        guides(fill = guide_legend(direction = "horizontal"))
+```
+
+```{r}
+#| vscode: {languageId: r}
+library(sf)
+library(ggplot2)
+library(xlsx)
+library(tidyverse)
+library(viridis)
+library(ggspatial)
+```
+
+```{r}
+#| vscode: {languageId: r}
+data2 <- xlsx::read.xlsx("C:/Users/lenovo/Desktop/整合后数据.xlsx", sheetName = "2018", header = TRUE)
+values_2018 <- data2[, c(1, 7)]
+countryvalues_2018<- left_join(province_geo, values_2018, by = c("name" = "province"))
+breaks <- seq(0, 1, by = 0.1)
+labs <- c("极度失调", "严重失调", "中度失调", "轻度失调", "濒临失调", "勉强协调", "初级协调", "中级协调", "良好协调", "优质协调")
+countryvalues_2018$cat <- cut(countryvalues_2018$num, 
+                            breaks = breaks,
+                            labels = labs,
+                            include.lowest = TRUE
+                            )
+```
+
+```{r}
+#| vscode: {languageId: r}
+head(data2)
+```
+
+```{r}
+#| vscode: {languageId: r}
+countryvalues_2018
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data = countryvalues_2018) + 
+        geom_sf(aes(fill = num),
+                color = "white", 
+                linewidth = 1.5
+                ) + 
+        geom_sf(data = result,
+                color = "white", 
+                fill = "transparent", 
+                linewidth = 0.1) +  
+        geom_sf(data = lake_geo,
+                fill = "#D6F1FF",
+                color = "transparent") +
+        annotation_north_arrow(location="tr",
+                style =north_arrow_nautical(
+                fill =c("grey40","white"),
+                line_col ="grey20"),
+                )+ 
+        scale_fill_viridis(option = "magma",
+                breaks = seq(0, 0.5 , by = 0.05),
+                alpha = 0.7, # 使填充更亮一点
+                begin = 0.1, 
+                end = 0.9,
+                guide = guide_legend(
+                keyheight = unit(5, units = "mm"),
+                title.position = "top",
+                reverse = T)        
+                ) +
+        labs(x = NULL, y = NULL, title = "中国地图", subtitle = "2018年耦合协调度分布", fill = "D") +
+        theme_minimal() +
+        theme(  plot.background = element_blank(),
+                panel.background = element_blank(),
+                panel.border = element_blank(),
+                plot.title = element_text(size = 40, hjust = 0.5),
+                plot.subtitle = element_text(size = 25, hjust = 0.5),
+                axis.text = element_blank(),
+                axis.title = element_blank(),
+                panel.grid = element_blank(),
+                plot.margin = unit(c(1, .5, .2, 0), "cm"),
+                panel.spacing = unit(c(-.1, 0.2, .2, 0.2), "cm"),
+                legend.title = element_text(size = 12),
+                legend.text = element_text(size = 10)
+        )
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data = countryvalues_2018) + 
+        geom_sf(aes(fill = cat),
+                color = "gray75", 
+                linewidth = 1.3
+                ) + 
+        geom_sf(data = result,
+                color = "white", 
+                fill = "transparent", 
+                linewidth = 0.1) +  
+        geom_sf(data = lake_geo,
+                fill = "#D6F1FF",
+                color = "transparent") +
+        annotation_north_arrow(location="tr",
+                style =north_arrow_nautical(
+                fill =c("grey40","white"),
+                line_col ="grey20"),
+                )+ 
+        scale_fill_viridis_d(option = "viridis",
+                alpha = 0.7, # 使填充更亮一点
+                begin = 0.1, 
+                end = 0.8,
+                na.value = "gray30",
+                guide = guide_legend(
+                keyheight = unit(5, units = "mm"),
+                title.position = "top",
+                reverse = T)
+                ) +        
+        labs(x = NULL, y = NULL, title = "2018年耦合协调度分布", fill = "耦合协调度") +
+        theme_minimal() +
+        theme(  plot.background = element_blank(),
+                panel.background = element_blank(),
+                panel.border = element_blank(),
+                plot.title = element_text(size = 40, hjust = 0.5),
+                plot.subtitle = element_text(size = 25, hjust = 0.5),
+                axis.text = element_blank(),
+                axis.title = element_blank(),
+                panel.grid = element_blank(),
+                plot.margin = unit(c(1, .5, .2, 0), "cm"),
+                panel.spacing = unit(c(-.1, 0.2, .2, 0.2), "cm"),
+                legend.title = element_text(size = 18),
+                legend.text = element_text(size =16),
+                legend.margin = margin(0.5, 0.5, 0.5, -5, "cm")
+        )
+```
+
+```{r}
+#| vscode: {languageId: r}
+data3 <- xlsx::read.xlsx("C:/Users/lenovo/Desktop/整合后数据.xlsx", sheetName = "2021", header = TRUE)
+values_2021 <- data2[, c(1, 7)]
+countryvalues_2021<- left_join(province_geo, values_2021, by = c("name" = "province"))
+breaks <- seq(0, 1, by = 0.1)
+labs <- c("极度失调", "严重失调", "中度失调", "轻度失调", "濒临失调", "勉强协调", "初级协调", "中级协调", "良好协调", "优质协调")
+countryvalues_2021$cat <- cut(countryvalues_2021$num, 
+                            breaks = breaks,
+                            labels = labs,
+                            include.lowest = TRUE
+                            )
+```
+
+```{r}
+#| vscode: {languageId: r}
+head(data3)
+```
+
+```{r}
+#| vscode: {languageId: r}
+head(countryvalues_2021)
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data = countryvalues_2021) + 
+        geom_sf(aes(fill = num),
+                color = "white", 
+                linewidth = 1.5
+                ) + 
+        geom_sf(data = result,
+                color = "white", 
+                fill = "transparent", 
+                linewidth = 0.1) +  
+        geom_sf(data = lake_geo,
+                fill = "#D6F1FF",
+                color = "transparent") +
+        annotation_north_arrow(location="tr",
+                style =north_arrow_nautical(
+                fill =c("grey40","white"),
+                line_col ="grey20"),
+                )+ 
+        scale_fill_viridis(option = "magma",
+                breaks = seq(0, 0.5 , by = 0.05),
+                alpha = 0.7, # 使填充更亮一点
+                begin = 0.1, 
+                end = 0.9,
+                guide = guide_legend(
+                keyheight = unit(5, units = "mm"),
+                title.position = "top",
+                reverse = T)        
+                ) +
+        labs(x = NULL, y = NULL, title = "中国地图", subtitle = "2021年耦合协调度分布", fill = "D") +
+        theme_minimal() +
+        theme(  plot.background = element_blank(),
+                panel.background = element_blank(),
+                panel.border = element_blank(),
+                plot.title = element_text(size = 40, hjust = 0.5),
+                plot.subtitle = element_text(size = 25, hjust = 0.5),
+                axis.text = element_blank(),
+                axis.title = element_blank(),
+                panel.grid = element_blank(),
+                plot.margin = unit(c(1, .5, .2, 0), "cm"),
+                panel.spacing = unit(c(-.1, 0.2, .2, 0.2), "cm"),
+                legend.title = element_text(size = 12),
+                legend.text = element_text(size = 10)
+        )
+```
+
+```{r}
+#| vscode: {languageId: r}
+ggplot(data = countryvalues_2021) + 
+        geom_sf(aes(fill = cat),
+                color = "gray75", 
+                linewidth = 1.3
+                ) + 
+        geom_sf(data = result,
+                color = "white", 
+                fill = "transparent", 
+                linewidth = 0.1) +  
+        geom_sf(data = lake_geo,
+                fill = "#D6F1FF",
+                color = "transparent") +
+        annotation_north_arrow(location="tr",
+                style =north_arrow_nautical(
+                fill =c("grey40","white"),
+                line_col ="grey20"),
+                )+ 
+        scale_fill_viridis_d(option = "viridis",
+                alpha = 0.7, # 使填充更亮一点
+                begin = 0.1, 
+                end = 0.8,
+                na.value = "gray30",
+                guide = guide_legend(
+                keyheight = unit(5, units = "mm"),
+                title.position = "top",
+                reverse = T)
+                ) +        
+        labs(x = NULL, y = NULL, title = "2021年耦合协调度分布", fill = "耦合协调度") +
+        theme_minimal() +
+        theme(  plot.background = element_blank(),
+                panel.background = element_blank(),
+                panel.border = element_blank(),
+                plot.title = element_text(size = 40, hjust = 0.5),
+                plot.subtitle = element_text(size = 25, hjust = 0.5),
+                axis.text = element_blank(),
+                axis.title = element_blank(),
+                panel.grid = element_blank(),
+                plot.margin = unit(c(1, .5, .2, 0), "cm"),
+                panel.spacing = unit(c(-.1, 0.2, .2, 0.2), "cm"),
+                legend.title = element_text(size = 18),
+                legend.text = element_text(size =16),
+                legend.margin = margin(0.5, 0.5, 0.5, -5, "cm")
+        )
+```
+
+```{r}
+#| vscode: {languageId: r}
+# 加载必要的库
+library(ggplot2)
+
+# 创建一个示例数据集（带有高程信息）
+# 这里假设你有一个二维的高程矩阵
+elevation <- matrix(c(
+  10, 15, 10, 12, 15,
+  8,  10, 12,  9,  11,
+  6,   8,  9,  6,   7,
+  4,   6,  7,  5,   6,
+  2,   4,  5,  3,   3
+), nrow = 5, ncol = 5, byrow = TRUE)
+
+# 创建一个包含行列索引和高程值的数据框
+data <- expand.grid(x = 1:5, y = 1:5)
+data$elevation <- c(elevation)
+# 绘制山地阴影
+ggplot(data, aes(x, y, alpha = elevation)) +
+  geom_raster() +
+  scale_fill_gradient(low = "white", high = "blue") +
+  theme_minimal()
+```
+
+```{r}
+#| vscode: {languageId: r}
+
+  theme_minimal() +
+  theme(
+    text = element_text(family = default_font_family,
+                        color = default_font_color),
+    # remove all axes
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    # add a subtle grid
+    panel.grid.major = element_line(color = "#dbdbd9", size = 0.2),
+    panel.grid.minor = element_blank(),
+    # background colors
+    plot.background = element_rect(fill = default_background_color,
+                                   color = NA),
+    panel.background = element_rect(fill = default_background_color,
+                                    color = NA),
+    legend.background = element_rect(fill = default_background_color,
+                                     color = NA),
+    # borders and margins
+    plot.margin = unit(c(.5, .5, .2, .5), "cm"),
+    panel.border = element_blank(),
+    panel.spacing = unit(c(-.1, 0.2, .2, 0.2), "cm"),
+    # titles
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 9, hjust = 0,
+                               color = default_font_color),
+    plot.title = element_text(size = 15, hjust = 0.5,
+                              color = default_font_color),
+    plot.subtitle = element_text(size = 10, hjust = 0.5,
+                                 color = default_font_color,
+                                 margin = margin(b = -0.1,
+                                                 t = -0.1,
+                                                 l = 2,
+                                                 unit = "cm"),
+                                 debug = F),
+    # captions
+    plot.caption = element_text(size = 7,
+                                hjust = .5,
+                                margin = margin(t = 0.2,
+                                                b = 0,
+                                                unit = "cm"),
+                                color = "#939184"),
+    )
+```
