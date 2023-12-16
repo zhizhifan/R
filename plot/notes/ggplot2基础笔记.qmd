@@ -9,6 +9,7 @@ editor:
 # 基础知识
 
 ggplot2语法可以划分成以下几个部分：
+
 - 数据集（data）：这部分包括了数据集的清洗整理，不再赘述。
 - 图像属性（aes）
 - 映射（mapping）：各种图像属性的空间映射。
@@ -19,35 +20,6 @@ ggplot2语法可以划分成以下几个部分：
 - 坐标系（coord）
 - 分面（facet）
 - 主题（theme）：对图形精雕细琢。
-
-## 图层
-
-ggplot2通过添加图层的方法来绘制想要的结果，每一个图层需要组合相应的几何对象。图层之间用`+`连接。同时越往后，其图层越在上方。
-
-## 图形属性（美学属性）
-
-每一个图形属性都可以映射为一个变量（离散变量或连续变量）或者单独设定成一个常数。图形属性不进行显式声明则使用默认值。
-
-美学属性单独赋值和映射的区别（以颜色为例：）
-
-```{r}
-#| vscode: {languageId: r}
-library(tidyverse)
-library(patchwork)
-p1 <- mpg %>% ggplot(aes(displ, hwy)) + geom_point(size = 3, aes(colour="red"))  
-p2 <- mpg %>% ggplot(aes(displ, hwy)) + geom_point(size = 3, colour="red") 
-p1 + p2
-```
-
-### 常用图形属性类型
-
-不同的几何对象有不同的图形属性，常见的有：
-1. color（colour）：线条颜色
-2. size
-3. shape
-4. fill：填充颜色
-5. group：分组
-6. x，y：坐标位置
 
 ## 绘图步骤
 
@@ -83,6 +55,35 @@ ggplot2对象在加上图层前没有任何几何图形，只是空白的坐标�
 通过`guides()`函数调整图例，主要包括连续型和离散型两种类型的图例。
 
 7. 设定主题
+   
+## 图层
+
+ggplot2通过添加图层的方法来绘制想要的结果，每一个图层需要组合相应的几何对象。图层之间用`+`连接。同时越往后，其图层越在上方。
+
+## 图形属性（美学属性）
+
+每一个图形属性都可以映射为一个变量（离散变量或连续变量）或者单独设定成一个常数。图形属性不进行显式声明则使用默认值。
+
+美学属性单独赋值和映射的区别（以颜色为例：）
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(patchwork)
+p1 <- mpg %>% ggplot(aes(displ, hwy)) + geom_point(size = 3, aes(colour="red"))  
+p2 <- mpg %>% ggplot(aes(displ, hwy)) + geom_point(size = 3, colour="red") 
+p1 + p2
+```
+
+### 常用图形属性类型
+
+不同的几何对象有不同的图形属性，常见的有：
+1. color（colour）：线条颜色
+2. size
+3. shape
+4. fill：填充颜色
+5. group：分组
+6. x，y：坐标位置
 
 ## 几何对象
 
@@ -91,6 +92,7 @@ ggplot2对象在加上图层前没有任何几何图形，只是空白的坐标�
 ### 几何对象类型
 
 几何对象可以包括以下几种：
+
 ![](note_img/几何对象类型.png)
 
 ### 几何对象图形属性值和统计变换
@@ -105,8 +107,7 @@ ggplot2对象在加上图层前没有任何几何图形，只是空白的坐标�
 
 一般几何对象可以分为个体几何对象和群组几何对象两类。个体几何对象对数据框的每一条数据绘制一个以区别于其他个体的图形对象，例如散点。群组几何对象用来表示多条观测。它们可以是某个统计摘要的一个结果，或者是几何对象的基础展示，例如多边形。
 
-线条和路径这种几何对象介于这两者之间：每条线都由许多线段组成，而每条线段又代表两个点。此时需要映射分组group图形属性来解决这种冲突。因为在ggplot2中，group属性用于指定数据点的分组方式。它在绘制具有多个组的数据时非常有用，尤其是在绘制线图（line
-plot）或区域图（area plot）时。
+线条和路径这种几何对象介于这两者之间：每条线都由许多线段组成，而每条线段又代表两个点。此时需要映射分组group图形属性来解决这种冲突。因为在ggplot2中，group属性用于指定数据点的分组方式。它在绘制具有多个组的数据时非常有用，尤其是在绘制线图（line plot）或区域图（area plot）时。
 
 ```{r}
 #| vscode: {languageId: r}
@@ -149,7 +150,7 @@ ggplot(data, aes(x = category)) +
 
 对数据进行统计变换，即通常以某种方式对数据信息进行汇总。例如，平滑（smoother）是一个很有用的统计变换，它能在一些限制条件的约束下给定x值时y的平均值。
 
-统计（stat）变换函数在数据被绘制出来之前对数据进行聚合和其他计算。它将输入的数据集看做输入，将返回的数据集作为输出，因此此统计变换可以向原数据集中插入新的变量，例如，常被用来绘制直方图的bin统计变换会生成如下变量：count，每个组里观测值的数目；density，每个组里观测值的密度（占整体的百分数、组宽）；x，组的中心位置。这些生成的变量可以被直接调用，通过`after_stat()`函数指定即可：
+统计（stat）变换函数在数据被绘制出来之前对数据进行聚合和其他计算。它将输入的数据集看做输入，将返回的数据集作为输出，因此此统计变换可以向原数据集中插入新的变量，例如，常被用来绘制直方图的`bin`统计变换会生成如下变量：count---每个组里观测值的数目；density---个组里观测值的密度（占整体的百分数、组宽）；x---组的中心位置。这些生成的变量可以被直接调用，通过`after_stat()`函数指定即可：
 
 ```{r}
 
@@ -170,15 +171,60 @@ ggplot(data, aes(x = category)) +
 library(tidyverse)
 mpg %>% 
   ggplot(aes(x = cty)) +
-  geom_histogram(aes(y = after_stat(density)), fill = "steelblue") +
+  geom_histogram(aes(y = after_stat(density)), fill = "steelblue") +    # 默认为 count
   theme_minimal()
 ```
+
+如果不想使用统计变换，设置参数`stat = "identity"`即可。
 
 常见的统计变换函数如下图：
 ![](note_img/统计变换.png)
 
 ### 深入统计变换
 
+之前我们都是使用`geom_xx()`函数里面的`stat`参数进行统计变换。同样，我们也可以直接使用`stat_xx()`函数进行图层的创建，而使用`geom`参数创建几何对象。前者更侧重图表类型的绘制，通过修改统计变换参数实现绘图前数据的统计变换；后者更侧重统计变换过程，所以可以直接根据统计变换结果绘制不同的图表。
+
+#### 统计摘要（stat_summary()）
+
+对于每个x的取值，计算对应y的统计摘要通常是有用的。`stat_summary()`使用ymin，y和ymax等图形属性，为汇总y的条件分布提供了一种灵活的方式。
+
+函数及其参数如下：
+
+```{r}
+# stat_summary(
+#   mapping = NULL,
+#   data = NULL,
+#   geom = "pointrange",
+#   position = "identity",
+#   ...,
+#   fun.data = NULL,
+#   fun = NULL,
+#   fun.max = NULL,
+#   fun.min = NULL,
+#   fun.args = list(),
+#   na.rm = FALSE,
+#   orientation = NA,
+#   show.legend = NA,
+#   inherit.aes = TRUE,
+#   fun.y = deprecated(),
+#   fun.ymin = deprecated(),
+#   fun.ymax = deprecated()
+# )
+```
+
+##### 单独的摘要计算函数
+
+fun、fun.min、fun.max参数能够接受简单的数值型摘要计算函数，即该函数能够传入一个数值向量并返回一个数值型结果，如mean()、median()、min()、max()等。
+
+```{r}
+library(tidyverse)
+ggplot(mtcars, aes(cyl, mpg)) +
+  geom_point() +
+  stat_summary(mapping = aes(color = "mean"), fun = "mean" , size = 4, geom = "point") +
+  stat_summary(mapping = aes(color = "median"), fun = "median", size = 4, geom = "point") +
+  scale_color_manual(values = c("mean" = "red", "median" = "blue")) +
+  theme_minimal()
+```
 ### 统计变换与标度变换
 
 > 标度变换先于统计变换，因此统计量都是基于标度变换后的数据进行计算的。
