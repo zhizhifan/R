@@ -11,8 +11,13 @@
 #   geom_point() +
 #   stat_summary(fun.data = "mean_cl_boot", colour = "red", linewidth = 2, size = 3)
 
+# library(tidyverse)
+# ggplot(mtcars, aes(cyl, mpg)) +
+#   geom_point() +
+#   stat_summary(fun = "mean", color = "#007c7c", size = 4, geom = "point") +
+#   theme_minimal()
+
 library(tidyverse)
-ggplot(mtcars, aes(cyl, mpg)) +
-  geom_point() +
-  stat_summary(fun = "mean", color = "#007c7c", size = 4, geom = "point") +
+ggplot(mtcars, aes(cyl)) +
+  stat_bin(bins = 3, geom = "bar") +
   theme_minimal()

@@ -97,7 +97,7 @@ p1 + p2
 
 ### 几何对象图形属性值和统计变换
 
-每个几何对象都有一组他能识别的图形属性和一组绘图所需要的值（例如，一个点含有颜色、大小和形状等图形属性，以及x和y位置坐标；一个条形含有高度、条宽、边界颜色和填充颜色等颜色属性值）。有些几何对象的图形属性略有不同，例如tile图形需要指定上下左右位置（ymin、ymax、xmin、xmax）。
+每个几何对象都有一组他能识别的图形属性和一组绘图所需要的值（例如，一个点含有颜色、大小和形状等图形属性，以及x和y位置坐标；一个条形含有高度、条宽、边界颜色和填充颜色等颜色属性值）。有些几何对象的图形属性略有不同，例如tile瓦片图形需要指定上下左右位置（ymin、ymax、xmin、xmax）。
 
 同时，每一个几何对象都有一个默认的统计变换，对应地，每一个统计变换也都有一个默认的几何对象。例如封箱（bin）统计变换默认使用条形几何对象（bar）。修改这些默认值虽然能生成符合语法地绘图，但是它们可能会违法一些绘图惯例。
 
@@ -175,18 +175,20 @@ mpg %>%
   theme_minimal()
 ```
 
-如果不想使用统计变换，设置参数`stat = "identity"`即可。
+如果不想使用统计变换，设置参数`stat = "identity"`即可。不使用统计变换（identity）的意思是，绘制的图形所需数据完全来自输入（y，ymin，ymax），或者来自统计摘要`stat_summary()`。
 
 常见的统计变换函数如下图：
 ![](note_img/统计变换.png)
 
 ### 深入统计变换
 
-之前我们都是使用`geom_xx()`函数里面的`stat`参数进行统计变换。同样，我们也可以直接使用`stat_xx()`函数进行图层的创建，而使用`geom`参数创建几何对象。前者更侧重图表类型的绘制，通过修改统计变换参数实现绘图前数据的统计变换；后者更侧重统计变换过程，所以可以直接根据统计变换结果绘制不同的图表。
+之前我们都是使用`geom_xx()`添加图层，同时使用函数里面的`stat`参数进行统计变换。其实我们也可以直接使用`stat_xx()`函数进行图层的创建，同时使用其中的`geom`参数创建几何对象（这些几何对象一定是没有统计变换的基本对象）。前者更侧重图表类型的绘制，通过修改统计变换参数实现绘图前数据的统计变换；后者更侧重统计变换过程，所以可以直接根据统计变换结果绘制不同的图表。但需要注意的是，统计变换的结果一定要与将要绘制的几何对象图形属性相匹配。
+
+具体来说，其实无论是什么样的几何对象，基本上都使用条线点组合而成。以箱线图的绘制为例，geom_boxplot() 是一个统一的函数，封装了计算和绘制的步骤，使用户能够更方便地绘制盒须图。stat_boxplot() 负责计算出盒须图需要的五个数值：最小值、第一四分位数、中位数、第三四分位数和最大值。这些计算出的数值随后被 geom_boxplot() 所调用，以绘制出标准的盒须图，包括盒子、须线以及可能的异常值。
 
 #### 统计摘要（stat_summary()）
 
-对于每个x的取值，计算对应y的统计摘要通常是有用的。`stat_summary()`使用ymin，y和ymax等图形属性，为汇总y的条件分布提供了一种灵活的方式。
+对于每个x的取值，计算**对应y的统计摘要**通常是有用的。`stat_summary()`使用ymin，y和ymax等图形属性，为**汇总y的条件分布**提供了一种灵活的方式。该统计摘要默认几何对象为`pointrange`，即：用一条中间带点的竖直线代表一个区间。
 
 函数及其参数如下：
 
@@ -212,19 +214,95 @@ mpg %>%
 # )
 ```
 
+```{r}
+library(tidyverse)
+ggplot(mtcars, aes(cyl, mpg)) +
+  stat_summary(fun = mean, fun.min = min, fun.max = max, geom = "pointrange") +
+  # pointrange几何对象显然需要中间点以及竖线范围的两个极点的数值
+  theme_minimal()
+```
+
 ##### 单独的摘要计算函数
 
-fun、fun.min、fun.max参数能够接受简单的数值型摘要计算函数，即该函数能够传入一个数值向量并返回一个数值型结果，如mean()、median()、min()、max()等。
+`fun`、`fun.min`、`fun.max`参数能够接受简单的数值型摘要计算函数，即该函数能够传入一个数值向量（x）并返回一个数值型结果（根据x分组的的统计摘要值），如mean()、median()、min()、max()函数等。其中`fun`参数更广泛，`fun.min`和`fun.max`则更关注最值的统计，一般与`geom = "errorbar"`配合使用。
 
 ```{r}
 library(tidyverse)
 ggplot(mtcars, aes(cyl, mpg)) +
   geom_point() +
-  stat_summary(mapping = aes(color = "mean"), fun = "mean" , size = 4, geom = "point") +
-  stat_summary(mapping = aes(color = "median"), fun = "median", size = 4, geom = "point") +
+  stat_summary(mapping = aes(color = "mean"), fun = mean , size = 4, geom = "point") +
+  stat_summary(mapping = aes(color = "median"), fun = median, size = 4, geom = "point") +
   scale_color_manual(values = c("mean" = "red", "median" = "blue")) +
   theme_minimal()
 ```
+
+```{r}
+library(tidyverse)
+ggplot(mtcars, aes(cyl, mpg)) +
+  geom_point() +
+  stat_summary(fun.min = min, fun.max = max, geom = "errorbar") +
+  theme_minimal()
+```
+
+##### 统一的摘要计算函数
+
+`fun.data`参数可以支持更复杂的摘要计算函数，它可以是来自`Hmisc`包中的函数，也可以是自己编写的摘要计算函数。此函数对于每个 x 值进行统计摘要的分组计算，且应返回一个包含至少三个变量的数据框：ymin、y 和 ymax。
+
+对于自编函数：
+
+```{r}
+library(tidyverse)
+iqr <- function(x, ...) {
+  qs <- quantile(x, probs = c(0.25, 0.75), na.rm = TRUE)
+  names(qs) <- c("ymin", "ymax")
+  return(qs)
+}
+ggplot(mtcars, aes(cyl, mpg)) +
+  stat_summary(fun.data = iqr, fill = "#007c7c", geom = "ribbon", alpha = .7) +
+  theme_minimal()
+```
+
+对于Hmisc包里面的函数调用，可以参考下图：
+
+![](note_img/Hmisc.png)
+
+```{r}
+library(tidyverse)
+ggplot(mtcars, aes(cyl, mpg)) +
+  stat_summary(fun.data = mean_cl_boot, color = "#007c7c", geom = "errorbar") +
+  theme_minimal()
+```
+
+#### 封箱统计变换函数（stat_bin()）
+
+封箱统计函数的默认几何对象为`bar`，其参数如下：
+
+```{r}
+
+# stat_bin(
+#   mapping = NULL,
+#   data = NULL,
+#   geom = "bar",
+#   position = "stack",
+#   ...,
+#   binwidth = NULL,
+#   bins = NULL,
+#   center = NULL,
+#   boundary = NULL,
+#   breaks = NULL,
+#   closed = c("right", "left"),
+#   pad = FALSE,
+#   na.rm = FALSE,
+#   orientation = NA,
+#   show.legend = NA,
+#   inherit.aes = TRUE
+# )
+
+```
+
+##### 其余统计变换函数与自建统计变换函数
+
+
 ### 统计变换与标度变换
 
 > 标度变换先于统计变换，因此统计量都是基于标度变换后的数据进行计算的。
