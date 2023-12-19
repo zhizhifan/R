@@ -307,7 +307,7 @@ ggplot(mtcars, aes(cyl, mpg)) +
 
 #### 结合几何对象和统计变换
 
-将几何对象和不同的统计变换进行组合，可以轻松地绘制出新颖地图形，这在之前的代码中已经有所体现。类似地，ggplot2中有大量地几何对象就是基于其他几何对象衍生出来的（通过修改某个已存在地几何对象地默认图形属性或统计变换）：
+将几何对象和不同的统计变换进行组合，可以轻松地绘制出新颖的图形，这在之前的代码中已经有所体现。类似地，ggplot2中有大量的几何对象就是基于其他几何对象衍生出来的（通过修改某个已存在的几何对象地默认图形属性或统计变换）：
 
 ![](note_img/combined-goems.png)
 
@@ -381,14 +381,7 @@ p3
 
 #### 映射(mapping)
 
-在知道标度的定义域和值域后，将执行这个映射数据到图形属性的函数。
-
-标度的分类: 1.
-位置标度：将连续型，离散型和日期-时间型变量映射到绘图区域，以及构造相应的坐标轴。
-1. 颜色标度：将连续型和离散型变量映射到颜色。 3.
-手动标度：将离散型变量映射到我们选择的符号大小、线条类型、形状或颜色，以及创建对应的图例。
-4.
-同一型标度，用于直接将变量值绘制为图形属性，而不去映射它们。举例来说，假设我们想要将变量映射为符号的颜色，而此变量本身就是一个由颜色值组成的向量，那么我们就无须再将其映射为其他的颜色，直接渲染这些值本身即可。
+在知道标度的定义域和值域后，将执行这个映射数据到图形属性的函数。同时标度也支持缺失值的映射，通过`na.value`参数，我们也可以将缺失值映射到特定的图形属性。
 
 ### 标度的用法
 
@@ -403,7 +396,7 @@ p3
 
 以下参数对所有标度通用：
 
-1. `name`：设置坐标轴或图例上出现的标签。该参数可以直接通过`labs()`一次性写完。
+1. `name`：设置坐标轴或图例上出现的标签。该参数可以直接通过`labs()`简写函数。
 
 ```{r}
 
@@ -426,135 +419,142 @@ p3
 
 2. `limits`：固定标度的定义域。连续型标度接受一个**长度为2的数值型向量**；离散型标度接受一个**字符型向量**。一旦接受了limits，数据将不再进行任何训练，即任何不在此limits规定的定义域内的值均将被丢弃。这个丢弃过程是在统计量计算之前的，这点值得注意。
 
-由于经常需要微调这些标签．所以也可以使用辅助函数`xlim()`,`ylim()`
-
 3. `breaks`和`labels`：breaks 控制着**显示在坐标轴或图例上的值**，即坐标轴上应该显示哪些刻度线的值，或连续型标度在一个图例中将被如何分段。而labels则指定了断点处显示的标签。设置了labels就必须指定breaks，只有这样才能保证这两个参数的正确匹配。当然也可以只设置breaks而不设置labels。
-
-值得注意的是，ggplot2在进行绘图时会对变量的定义域进行一定程度的扩展，这样使得图像不至于落在边缘。而当我们在设置breaks参数时，不应该超出变量定义域太多，否则即使设置了也无法显现出来。解决方法是使用expand参数对坐标轴进行一定程度的扩展。
-
-``` r
-scale_x_continuous(breaks = c(0.1, 0.2, 0.3), expand = c(x, y))
-# 其中x为下限的扩展程度，y为上限地扩展程度。x，y的值表示x或y坐标轴扩展的百分比值两者都是百分数。
-```
 
 ### 位置标度
 
+每幅图形一定拥有两个位置标度，一个指定水平位置（x标度），另外一个指定竖直位置（y标度）。由于经常需要微调数据的定义域范围．所以也会使用辅助函数`xlim()`,`ylim()`。值得注意的是，默认情况下，位置标度的`limits`会对变量的定义域进行一定程度的扩展，这样就保证了数据与坐标轴不会发生重叠。使用`expand = expansion()`来控制溢出量，`expansion()`函数第一个参数给出的是乘式的溢出量，第二个参数给出的是加式的溢出量。
+
 #### 连续型
 
-最常用的连续型位置标度是`scale_x_continuous()`和`scale_y_continuous()`。
+最常用的连续型位置标度是`scale_x_continuous()`和`scale_y_continuous()`。它们都将数据映射到x轴和y轴，而最有趣的变式是通过变换来形成的。每个连续型标度均可接受一个`trans`参数，允许指定若干种线性或非线性的变换。而每一种变换都是由所谓的“变换器”（transformer）来实现的，变换器描述了变换本身和对应的逆变换，以及如何去绘制标签。
 
-而最有趣的变式是通过变换来形成的。每个连续型标度均可接受一个trans参数，允许指定若干种线性或非线性的变换。而每一种变换都是由所谓的"变换器"(transformer)来实现的，变换器描述了变换本身和对应的逆变换，以及如何去绘制标签。
+![](note_img/标度转换器.png)
 
-![](笔记图片素材\标度转换器.png)
+变换通常被用来修改位置标度，所以对于x，y和z标度都是有简便写法的：`scale_x_log1O()`和`scale_x_continuous(trans=
+"logl0")`是等价的。参数trans对任意的连续型标度均有效，包括后面的颜色梯度，但简便写法仅针对位置标度存在。
 
-变换通常被用来修改位置标度，所以对于x,y标度都是有简便写法的：scale_x_log1O()scale_x_continuous(trans=
-"logl0")是等价的。参数trans对任意的连续型标度均有效，包括后面的颜色梯度，但简便写法仅针对位过标度存在。变换器同样也可以使用在coord_trans()中，此时变换将在统计量计算完成后进行，因而会影响图形主体的外观。
+自行实施变换，比如直接绘制log10(x)和利用标度变换`scale_x_log()`是不同的，虽然两者在绘图区域生成完全相同的结果，但坐标轴和刻度标签却是不同的：
 
 ```{r}
 #| vscode: {languageId: r}
-library(ggplot2)
-p1 <- ggplot(diamonds, aes(x = log10(carat), y = log10(price))) + geom_point()
-p1
+library(tidyverse)
+library(patchwork)
+data(diamonds)
 
-p2 <- ggplot(diamonds,aes(x = carat, y = price)) + geom_point() + scale_x_log10() + scale_y_log10()
-p2
+p1 <- ggplot(diamonds, aes(log10(carat), log10(price))) +
+  geom_point() +
+  theme_minimal()
 
-p3 <- ggplot(diamonds,aes(x = carat, y = price)) + geom_point()
-p3
+p2 <- ggplot(diamonds, aes(carat, price)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal()
 
-# 三张图存在差异，其中一二张图虽然相同，但坐标轴的刻度却是不同的。第一种做法改变了原数据空间，因而坐标轴的刻度也发生了变换。而第二种做法虽然也对数据进行了转换，但坐标轴的刻度仍采用原数据的。
+p1 / p2
 ```
 
 #### 日期和时间型
 
-我们常常在绘制时间序列图时，用到日期和时间。日期和时间值基本上属于连续型，但在标注坐标轴时有特殊的处理方式。如果日期和时间值是其他格式的，则需使用as.Date()或as.POSIXct()对其进行转换。
+我们常常在绘制时间序列图时，用到日期和时间。日期和时间值基本上属于连续型，但在标注坐标轴时有特殊的处理方式。如果日期和时间值是其他格式的，则需使用`as.Date()`、`as.POSIXct()`或其他对其进行转换为`date`、`time`或`dttm`类型。
 
-对于日期坐标轴，此标度`scale_x_date()`,
-`scale_y_date()`本身已经可以很好地选择默认值了，不过也可以进行微调，一般用到几个参数控制其外观和刻度的位置： -
-`name`: 坐标轴名称 - `date_breaks`: x轴上的日期刻度 - `date_labels`:
-日期标签格式 - `limits`: 坐标轴日期范围 - `expand`: 坐标轴轴刻度扩展因子
+对于日期坐标轴，此标度`scale_x_date()`，`scale_y_date()`本身已经可以很好地选择默认值了，不过也可以进行微调：
+- `date_breaks/date_minor_breaks`：指定日期间隔 
+- `date_labels`：日期标签格式
 
-其中有些已经在前面讲过，不再赘述。以下是一些参数讲解：
-
-`date_breaks`参数常见设置形式：
-
-`date_breaks = "width"`：根据时间间隔来设置日期刻度，即每个刻度之间的时间间隔为固定宽度。
-
-``` r
-scale_x_date(date_breaks = "1 day")
-# 表示每天显示一个日期刻度。
-
-scale_x_date(date_breaks = "2 years")
-# 表示每两年显示一个日期刻度。
-```
-
-`date_labels`参数常见设置形式：
-
-1.  date_labels = ""：使用给定的日期格式字符串显示日期标签
-
-``` r
-scale_x_date(date_labels = "%Y-%m-%d")
-# 表示显示日期格式为"年-月-日"。
-
-scale_x_date(date_labels = "%Y/%m/%d")
-# 表示显示日期格式为"年/月/日"。
-```
-
-![](笔记图片素材\日期标签格式.png)
-
-```{r}
-#| vscode: {languageId: r}
-# 以下是一段代码示例
-library(ggplot2)
-
-# 创建一个时间序列数据集
-data <- data.frame(
-    time = seq(as.Date("2020-01-01"), as.Date("2020-12-31"), by = "1 day"), # 用seq创建时间序列
-    value = rnorm(366)
-)
-head(data)
-```
-
-```{r}
-#| vscode: {languageId: r}
-# 绘制折线图
-ggplot(data, aes(x = time, y = value)) +
-    geom_line() +
-    scale_x_date(
-        limits = c(as.Date("2020-02-01"), as.Date("2020-11-30")),
-        date_breaks = ("1 month"),
-        date_labels = "%b",
-        expand = c(0.02, 0)
-    ) +
-    labs(title = "2020年每日数据趋势", x = "日期", y = "数值")
-```
+还有一些常见的位置标度参数，不再赘述。
 
 #### 离散型
 
-离散型位置标度`scale_x_discrete()`,
-`scale_y_discrete()`将输入中的各水平映射为整数。结果的顺序可用参数breaks进行控制，不想要的水平可以使用limits(或使用xlim()或ylim())进行丢弃。
-
-有时候将离散型变量映射到位置标度时顺序会发生变化，解决方案如下:
-
-``` r
-scale_x_discrete(limits = unique()) # unique括号里面添加列名
-```
+离散型位置标度`scale_x_discrete()`，`scale_y_discrete()`将输入中的各水平映射为整数。**结果的顺序可用参数`breaks`进行控制，不想要的水平可以使用`limits`（或使用`xlim()`或`ylim()`）进行丢弃。**
 
 ### 颜色标度
 
+除了位置标度以外，最常用的图形属性可能就是颜色了。基本的颜色标度对连续型值有三种基于渐变的方法，对离散型值由两种方法。
+
 #### 连续型
 
-常见的连续型颜色标度
+```{r}
 
-``` r
-scale_colour_gradient()和scale_fill_gradient() 
-#双色梯度。顺序为从低到高。参数low和high用以控制此梯度两端的颜色。
+# scale_colour/fill_gradient(
+#   ...,
+#   low = "#132B43",
+#   high = "#56B1F7",
+#   space = "Lab",
+#   na.value = "grey50",
+#   guide = "colourbar",
+#   aesthetics = "colour"
+# )
 
-scale_colour_gradient2()和scale_fill_gradient2 ()
-#三色梯度。顺序为低一中一高。参数low和high作用同上，这两种标度还在中点处拥有一个中间色。中点的默认值为0，也可以使用参数midpoint将其设置为任意值。
+# 双色梯度。顺序为从低到高。参数low和high用以控制此梯度两端的颜色。
 
-scale_colour_gradientn()和scale_fill_gradientn()
-#自定义的n色梯度。此标度需要赋给参数colours一个颜色向量。不加其他参数的话，这些颜色将依照数据的范围均匀地分布。
+# scale_colour/fill_gradient2(
+#   ...,
+#   low = muted("red"),
+#   mid = "white",
+#   high = muted("blue"),
+#   midpoint = 0,
+#   space = "Lab",
+#   na.value = "grey50",
+#   guide = "colourbar",
+#   aesthetics = "colour"
+# )
+
+# 三色梯度。顺序为低一中一高。参数low和high作用同上，这两种标度还有一个中间色mid。中点midpoint的默认值为0，指定将输入数据中的具体值映射到中间色mid上。
+
+# scale_colour/fill_gradientn(
+#   ...,
+#   colours,
+#   values = NULL,
+#   space = "Lab",
+#   na.value = "grey50",
+#   guide = "colourbar",
+#   aesthetics = "colour",
+#   colors
+# )
+
+```
+
+```{r}
+ggplot(mtcars, aes(mpg, disp)) +
+  geom_point(aes(color = disp), size = 3) +
+  scale_color_gradient2(mid = "white", midpoint = mean(mtcars$disp)) +
+  theme_minimal()
+```
+
+关于`scale_color_gradientn()`，这是自定义的n色梯度。此标度需要赋给参数`colours`一个颜色向量，用来指定渐变颜色。不加其他参数的话，这些颜色在渐变中的位置均匀分布。如果需要让这些颜色在渐变中的位置不均匀分布，则可以使用参数`values`，该参数向量会为颜色向量中的每种颜色提供一个介于0和1之间的相对位置，例如：
+
+```{r}
+set.seed(123)
+data <- data.frame(
+  Temperature = seq(-10, 30, by = 0.5),
+  Measurement = rnorm(81, mean = 10, sd = 5)
+)
+ggplot(data, aes(x = Temperature, y = Measurement)) +
+  geom_point(aes(color = Temperature), size = 3) +
+  scale_colour_gradientn(
+    colors = c("blue", "white", "orange", "red"),
+#     values = scales::rescale(c(-10, 0, 20, 30))
+  ) +
+  theme_minimal()
+```
+
+由于我们没有规定每个颜色的相对分布位置，所以ggplot2会默认均匀分布。但当我们需要强调0度为白色时，values参数则可以很好的体现这一点，我们使用`scales::rescale()`将所有温度标准化至0，1区间，这样就可以体现它们的相对位置：
+
+```{r}
+set.seed(123)
+data <- data.frame(
+  Temperature = seq(-10, 30, by = 0.5),
+  Measurement = rnorm(81, mean = 10, sd = 5)
+)
+ggplot(data, aes(x = Temperature, y = Measurement)) +
+  geom_point(aes(color = Temperature), size = 3) +
+  scale_colour_gradientn(
+    colors = c("blue", "white", "orange", "red"),
+    values = scales::rescale(c(-10, 0, 20, 30))
+  ) +
+  theme_minimal()
 ```
 
 #### 离散型
