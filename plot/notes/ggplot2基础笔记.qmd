@@ -334,9 +334,9 @@ p1 / p2
 
 ## 位置调整
 
-> 位置调整即是对该层的元素位置进行微调。一般用于处理离散型数据，这是要因为连续型数据很少出现完全重叠的问题
+位置调整即是对该图层的元素位置进行微调。一般用于处理离散型数据，这主要是因为连续型数据很少出现完全重叠的问题，当出现了这类问题时（由于数据密度高），即使微调，如随机扰动，通常也无法解决问题。
 
-![](笔记图片素材\位置调整参数.png)
+![](note_img/position.png)
 
 ```{r}
 #| vscode: {languageId: r}
@@ -540,7 +540,7 @@ ggplot(data, aes(x = Temperature, y = Measurement)) +
   theme_minimal()
 ```
 
-由于我们没有规定每个颜色的相对分布位置，所以ggplot2会默认均匀分布。但当我们需要强调0度为白色时，values参数则可以很好的体现这一点，我们使用`scales::rescale()`将所有温度标准化至0，1区间，这样就可以体现它们的相对位置：
+对温度分配颜色渐变，由于我们没有规定每个颜色的相对分布位置，所以ggplot2会默认均匀分布。此时0度并不是白色，但当我们需要强调0度为白色时，values参数则可以很好的体现这一点：使用`scales::rescale()`将所有标识温度标准化至0，1区间，这样就可以体现它们的相对位置：
 
 ```{r}
 set.seed(123)
@@ -559,36 +559,53 @@ ggplot(data, aes(x = Temperature, y = Measurement)) +
 
 #### 离散型
 
-离散型数据有两种颜色标度。一种可以自动选择颜色，另一种可以轻松地从手工甄选的颜色集中选择颜色。默认的配色方案，即scale_colour_hue(),可通过沿若hcl色轮选取均匀分布的色相来生成颜色。这种方案对多至约8种颜色时都能有较好的效果。但对于更多的颜色，要区分开不同的颜色就变得比较困难了。默认配色的另外一个缺点是，由于所有颜色都拥有相同的明度和彩度，所以当我们进行黑白打印时，它们就会成为几近相同的灰影。除了这种基于计算的方案以外，另一种可选的方案是使用ColorBrewer配色，这些手工甄选的颜色可在很多情境下良好地运作(如绘制地图)，这些颜色也因此在展示较大的面积时表现更佳。
+离散型数据有两种颜色标度。一种可以自动选择颜色，另一种可以轻松地从手工甄选的颜色集中选择颜色。
 
-对于类别型数据中的点而言，常用的调色板是"Set1"和"Dack2",对面积而言则是"Set2"、"Pastel1"、"Pastel2"和"Accent"。
+默认的配色方案，即`scale_colour/fill_hue()`，可通过沿若**hcl色轮**选取均匀分布的色相来生成颜色。这种方案对多至约8种颜色时都能有较好的效果。但对于更多的颜色，要区分开不同的颜色就变得比较困难了。默认配色的另外一个缺点是，由于所有颜色都拥有相同的明度和彩度，所以当我们进行黑白打印时，它们就会成为几近相同的灰影。
 
-``` r
-scale_color_brewer(palette = 'Set2')
+```{r}
+
+# scale_colour_hue(
+#   ...,
+#   h = c(0, 360) + 15,
+#   c = 100,
+#   l = 65,
+#   h.start = 0,
+#   direction = 1,
+#   na.value = "grey50",
+#   aesthetics = "colour"
+# )
+```
+
+除了这种基于计算的方案以外，另一种可选的方案是使用`ColorBrewer`配色，即使用`scale_color/fill_brewer()`这些手工甄选的颜色可在很多情境下良好地运作。
+
+该函数支持多个调色板，可以查看帮助文档。对于类别型数据中的点而言，常用的调色板是"Set1"和"Dack2"，对面积而言则是"Set2"、"Pastel1"、"Pastel2"和"Accent"。
+
+```{r}
+scale_colour_brewer(
+  ...,
+  type = "seq",
+  palette = 1,
+  direction = 1,
+  aesthetics = "colour"
+)
 ```
 
 ##### 手动离散型标度
 
-使用`scale_colour_manual()`这个手动型标度创建新的标度。手动型标度拥有一个重要参数values。可以使用它来指定这个标度应该生成的值。如果这个向量中的元素是有名称的，则它将自动匹配输入和输出的值，否则它将按照离散型变量中水平的先后次序进行匹配。
+离散型标度`scale_linetype()`，`scale_size_discrete()`和`scale_shape()`基本上没有选项。这些标度仅仅是按一定的顺序将因子的水平映射到一系列取值中。
 
-``` r
-library(ggplot2)
-ggplot(msleep, aes(x = brainwt, y = bodywt))+
-         geom_point(aes(color = vore))+
-         scale_x_log10()+
-         scale_y_log10()+
-         scale_color_manual(values = c(carni = 'red', 'NA' = 'orange', insecti = 'yellow', herbi = 'green', omni = 'blue'))
+使用`scale_colour/shape/linetype_manual()`这些手动型标度创建新的标度。手动型标度拥有一个重要参数`values`。可以使用它来指定这个标度应该生成的值。如果这个**向量中的元素是有名称的**，则它将自动匹配输入和输出的值，否则它将按照离散型变量中水平的先后次序进行匹配。
 
-# 该向量中的元素是有名称的，于是自动匹配了输入和输出的值：carni将使用红色等等
-
-library(ggplot2)
-ggplot(msleep, aes(x = brainwt, y = bodywt))+
-         geom_point(aes(color = vore))+
-         scale_x_log10()+
-         scale_y_log10()+
-         scale_color_manual(values = c('red', 'orange', 'yellow', 'green', 'blue'))
-
-# 按照离散型变量中水平的先后次序进行匹配(此时也要保证该向量元素的数量与类别变量的数量相匹配)
+```{r}
+library(tidyverse)
+ggplot(msleep, aes(x = brainwt, y = bodywt)) +
+  geom_point(aes(color = vore), size = 3) +
+  scale_x_log10() +
+  scale_y_log10() +
+  scale_color_manual(
+    values = c(carni = 'red', insecti = 'yellow', herbi = 'green', omni = 'blue')) +
+  theme_minimal()
 ```
 
 ## 添加额外元素

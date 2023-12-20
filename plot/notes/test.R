@@ -115,18 +115,18 @@ library(patchwork)
 #   theme_minimal() +
 #   labs(color = "Displacement (cc)")
 
+# set.seed(596)
+# dsamp <- diamonds[sample(nrow(diamonds), 1000), ]
+# ggplot(dsamp, aes(carat, price)) + 
+#   geom_point(aes(colour = clarity)) +
+#   scale_color_brewer(palette = "Dark2") +
+#   theme_minimal()
 
-# 创建示例数据
-set.seed(123)
-data <- data.frame(
-  Temperature = seq(-10, 30, by = 0.5),
-  Measurement = rnorm(81, mean = 10, sd = 5)
-)
-ggplot(data, aes(x = Temperature, y = Measurement)) +
-  geom_point(aes(color = Temperature), size = 3) +
-  scale_colour_gradientn(
-    colors = c("blue", "white", "orange", "red"),
-    values = scales::rescale(c(-10, 0, 20, 30))
-  ) +
+library(tidyverse)
+ggplot(msleep, aes(x = brainwt, y = bodywt)) +
+  geom_point(aes(color = vore), size = 3) +
+  scale_x_log10() +
+  scale_y_log10() +
+  scale_color_manual(
+    values = c(carni = 'red', insecti = 'yellow', herbi = 'green', omni = 'blue')) +
   theme_minimal()
-
