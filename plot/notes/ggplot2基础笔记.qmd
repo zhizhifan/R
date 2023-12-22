@@ -87,6 +87,80 @@ p1 + p2
 5. group：分组
 6. x，y：坐标位置
 
+### 分组
+
+在ggplot2里，几何对象可以大致分为个体几何对象和群组几何对象两类。个体几何对象针对数据集中的每个单独的数据点或观测值绘制一个图形元素。每个图形元素独立表示一个数据点，使得观察者可以直接看到数据集中每个观测值的特征。例如，在散点图中，每个点就是一个个体几何对象，代表数据集中的一个观测。群组几何对象与个体几何对象不同，群组几何对象代表的是数据集中多个观测值的集合或总体。这种对象通常用于展示分组或分类数据的特征，或者是某种统计摘要（如平均值、中位数等）。例如一些多边形：在条形图中，每个条形可能代表一组数据的平均值或总和，而在折线图中，线条可能表示随时间变化的数据趋势。
+
+线条和路径这种几何对象介于这两者之间：每条线都由许多线段组成，而每条线段又代表两个点。
+
+`group`分组图形属性用于指定数据点的分组方式，用来控制哪些观测值用哪些图形元素。默认情况下，图中**所有离散型变量**的交互作用被设为分组的默认值，通常这样已经可以正确地给数据分组，但是如果没能正确分组或者图中没有离散型变量，那么就需要自定义分组结构，即将group映射到一个在不同的组有不同取值的变量。当现有的单个变量不能正确地分组，而两个变量地组合可以正确分组时，可以使用`interaction()`函数。以下三种情况需要改变默认分组：
+
+#### 多个分组与单个图形属性
+
+很多时候，我们都想将数据分成若干组，并用相同的方式对每个组进行渲染。当从总体上来查看数据时，我们通常希望区分每个个体（在视觉上能够辨认出不同的个体）而不是识别它们（识别通常需要标签或图例来帮助用户读取具体的个体名字或类别），这在含有多个个体的纵向数据中是很常见的。常见的就是spaghetti plot的绘制：
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(nlme)
+ggplot(Oxboys, aes(age, height, group = Subject)) + 
+  geom_line(linewidth = 1) +
+  theme_minimal()
+```
+
+#### 不同图层上的不同分组
+
+利用`group = 1`可以将分组转换为默认分组：
+
+```{r}
+library(tidyverse)
+library(nlme)
+ggplot(Oxboys, aes(age, height, group = Subject)) + 
+  geom_line(linewidth = 1) +
+  geom_smooth(aes(group = 1), method = "lm", lwd = 2, color = "red", se = FALSE) +
+  theme_minimal()
+```
+
+#### 修改默认分组
+
+由于图像中的离散型变量会进行默认分组，所以在后续图层的绘制时，有必要进行分组的修改：
+
+```{r}
+ggplot(Oxboys, aes(Occasion, height)) +
+  geom_boxplot() +
+  geom_line(aes(group = Subject), color = "red") +
+  theme_minimal()
+```
+
+#### 匹配图形属性和图形对象
+
+群体几何对象的图形映射要映射给整体。同时，线条和路径遵循差一原则：观测点比线段数目多一，第一条线段将使用第一条观测的图形属性，第二条线段将使用第二条观测的图形属性，依次类推，这意味着最后一条观测的图形属性不会被用到。该图形属性一般就只会映射颜色，宽度，而线条类型必须是一个整数，R不能绘制不同线条类型相连接的线条：
+
+```{r}
+library(tidyverse)
+library(patchwork)
+df <- tibble(
+  x = 1:3,
+  y = 1:3
+)
+
+p1 <- ggplot(df, aes(x, y, color = x)) +
+  geom_point(size = 5) +
+  geom_line(lwd = 2) +
+  theme_minimal()
+# 连续型颜色的映射会对颜色梯度进行线性插值
+
+p2 <- df %>% mutate(x = factor(x)) %>%
+ggplot(aes(x, y, color = x)) +
+  geom_point(size = 5) +
+  geom_line(group = 1, lwd = 2) +
+  theme_minimal()
+
+p1 + p2
+
+```
+
+
 ## 几何对象
 
 几何对象执行图层的渲染，控制生成图像的类型。
@@ -104,49 +178,6 @@ p1 + p2
 同时，每一个几何对象都有一个默认的统计变换，对应地，每一个统计变换也都有一个默认的几何对象。例如封箱（bin）统计变换默认使用条形几何对象（bar）。修改这些默认值虽然能生成符合语法地绘图，但是它们可能会违法一些绘图惯例。
 
 ![](note_img/几何对象详解.png)
-
-### 分组
-
-一般几何对象可以分为个体几何对象和群组几何对象两类。个体几何对象对数据框的每一条数据绘制一个以区别于其他个体的图形对象，例如散点。群组几何对象用来表示多条观测。它们可以是某个统计摘要的一个结果，或者是几何对象的基础展示，例如多边形。
-
-线条和路径这种几何对象介于这两者之间：每条线都由许多线段组成，而每条线段又代表两个点。此时需要映射分组group图形属性来解决这种冲突。因为在ggplot2中，group属性用于指定数据点的分组方式。它在绘制具有多个组的数据时非常有用，尤其是在绘制线图（line plot）或区域图（area plot）时。
-
-```{r}
-#| vscode: {languageId: r}
-# 一下是一段代码示例
-library(ggplot2)
-library(nlme) # 调用nlme包的Oxboys数据集
-Oxboys # 数据集的age列存在相同的数据
-```
-
-```{r}
-#| vscode: {languageId: r}
-# 如果不指定分组图形属性， 那么绘制出来的线只是点的单纯连接，没有实际意义
-ggplot(Oxboys, aes(age, height)) + geom_line(linewidth = 1) 
-```
-
-```{r}
-#| vscode: {languageId: r}
-ggplot(Oxboys, aes(age, height, group = Subject)) + geom_line(linewidth = 1) 
-```
-
-有时需要设置 group = 1来连接相应的散点绘制折线图
-
-```{r}
-#| vscode: {languageId: r}
-library(ggplot2)
-library(xlsx)
-data <- xlsx::read.xlsx("笔记数据素材/基尼系数贡献率.xlsx", sheetIndex = 1, header = TRUE)
-head(data)
-ggplot(data, aes(x = category)) +
-    geom_line(aes(y = as.factor(Gw), color = "Gw"), linewidth = 2)
-```
-
-```{r}
-#| vscode: {languageId: r}
-ggplot(data, aes(x = category)) +
-    geom_line(aes(y = as.factor(Gw), group = 1, color = "Gw"), linewidth = 2)
-```
 
 ## 统计变换
 
@@ -334,29 +365,23 @@ p1 / p2
 
 ## 位置调整
 
-位置调整即是对该图层的元素位置进行微调。一般用于处理离散型数据，这主要是因为连续型数据很少出现完全重叠的问题，当出现了这类问题时（由于数据密度高），即使微调，如随机扰动，通常也无法解决问题。
+位置调整即是对该图层的元素位置进行微调。一般用于处理离散型数据，这主要是因为连续型数据很少出现完全重叠的问题，当出现了这类问题时（由于数据密度高），即使微调，如随机扰动，通常也无法解决问题。位置调整有以下五种，既可以指定代表它们名称的字符串，也可以直接调用对应的位置调整函数：
 
 ![](note_img/position.png)
 
+### 并排（dodge）
+
+声明`position="dodge2"/position_dodge2()`，其中关于`position_dodge2()`函数：
+
 ```{r}
-#| vscode: {languageId: r}
-# 以下是一段代码示例
-library(ggplot2)
 
-p1 <- ggplot(diamonds, aes(x = color, fill = cut)) +
-        geom_bar(position = "dodge") +
-        labs(title = "并列")
-p1
+# position_dodge2(
+#   width = NULL,
+#   preserve = "total",
+#   padding = 0.1,
+#   reverse = FALSE
+# )
 
-p2 <- ggplot(diamonds, aes(x = color, fill = cut)) +
-        geom_bar(position = "stack") +
-        labs(title = "堆叠")
-p2
-
-p3 <- ggplot(diamonds, aes(x = color, fill = cut)) +
-        geom_bar(position = "fill") +
-        labs(title = "堆叠并将高度标准化")
-p3
 ```
 
 ## 标度

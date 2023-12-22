@@ -62,8 +62,8 @@
 #   theme_minimal()
 
 
-library(tidyverse)
-library(patchwork)
+# library(tidyverse)
+# library(patchwork)
 # p1 <- ggplot(mtcars, aes(mpg, disp)) +
 #   geom_point(aes(color = disp), size = 3) +
 #   scale_color_gradientn(
@@ -122,11 +122,105 @@ library(patchwork)
 #   scale_color_brewer(palette = "Dark2") +
 #   theme_minimal()
 
-library(tidyverse)
-ggplot(msleep, aes(x = brainwt, y = bodywt)) +
-  geom_point(aes(color = vore), size = 3) +
-  scale_x_log10() +
-  scale_y_log10() +
-  scale_color_manual(
-    values = c(carni = 'red', insecti = 'yellow', herbi = 'green', omni = 'blue')) +
-  theme_minimal()
+# library(tidyverse)
+# ggplot(msleep, aes(x = brainwt, y = bodywt)) +
+#   geom_point(aes(color = vore), size = 3) +
+#   scale_x_log10() +
+#   scale_y_log10() +
+#   scale_color_manual(
+#     values = c(carni = 'red', insecti = 'yellow', herbi = 'green', omni = 'blue')) +
+#   theme_minimal()
+
+
+# library(tidyverse)
+# ggplot(mtcars, aes(factor(cyl), fill = factor(vs))) +
+#   geom_bar(
+#     position = position_dodge2(
+#       width = 5,
+#       preserve = "single",
+#       # padding = .2,
+#       # width = 1
+#     )
+#   ) +
+#   theme_minimal() +
+#   scale_fill_brewer(palette = "Set2")
+
+
+
+# # In this case a frequency polygon is probably a better choice
+# ggplot(diamonds, aes(price, colour = cut)) +
+#   geom_freqpoly(
+#     position = position_dodge2(width = 5)
+#   ) +
+#   theme_minimal()
+
+# Dodging with various widths -------------------------------------
+# To dodge items with different widths, you need to be explicit
+df <- data.frame(
+  x = c("a","a","b","b"),
+  y = 2:5,
+  g = rep(1:2, 2)
+)
+p <- ggplot(df, aes(x, y, group = g)) +
+  geom_col(position = "dodge", fill = "grey50", colour = "black")
+p
+# # So you must explicitly specify the width
+p + geom_linerange(
+  aes(ymin = y - 1, ymax = y + 1),
+  color = "red",
+  position = position_dodge2(width = 0.9)
+)
+
+
+
+# ggplot(diamonds, aes(x = price, group = cut)) +
+#   geom_freqpoly(bins = 30)  + # 选择合适的binwidth值
+#   stat_bin(bins = 30, geom = "point") +
+#   theme_minimal() +
+#   scale_color_brewer(palette = "Set2")
+
+
+# library(tidyverse)
+# library(nlme)
+# ggplot(Oxboys, aes(age, height, group = Subject)) +
+#   geom_line() +
+#   stat_smooth(aes(group = 1), method = "lm", se = FALSE) +
+#   theme_minimal()
+
+
+# ggplot(Oxboys, aes(Occasion, height)) +
+#   geom_boxplot() +
+#   geom_line(aes(group = Subject)) +
+#   theme_minimal()
+
+# tibble(
+#   x = 1:3,
+#   y = 1:3
+# ) %>% 
+# ggplot(aes(x, y, color = x)) +
+#   geom_point(size = 5) +
+#   geom_line(lwd = 2) +
+#   theme_minimal()
+
+# tibble(
+#   x = factor(1:3),
+#   y = 1:3
+# ) %>% 
+# ggplot(aes(x, y, color = x)) +
+#   geom_point(size = 5) +
+#   geom_line(group = 1, lwd = 2) +
+#   theme_minimal()
+
+# tibble(
+#   x = 1:3,
+#   y = 1:3
+# ) %>% 
+# ggplot(aes(x, y, color = x, lwd = x)) +
+#   geom_point(size = 5) +
+#   geom_line() +
+#   theme_minimal()
+
+# ggplot(diamonds, aes(color, fill = cut)) +
+#   geom_bar(position = position_dodge()) +
+#   scale_fill_brewer(palette = "Set1") +
+#   theme_minimal()
