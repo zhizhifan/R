@@ -364,7 +364,7 @@ p1 / p2
 
 ## 位置调整
 
-位置调整即是对该图层的元素位置进行微调。一般用于处理离散型数据，这主要是因为连续型数据很少出现完全重叠的问题，当出现了这类问题时（由于数据密度高），即使微调，如随机扰动，通常也无法解决问题。位置调整有以下五种，既可以指定代表它们名称的字符串，也可以直接调用对应的位置调整函数：
+位置调整即是对该图层的元素位置进行微调。一般用于处理离散型数据，这主要是因为连续型数据很少出现完全重叠的问题，当出现了这类问题时（由于数据密度高），即使微调，如随机扰动，通常也无法解决问题。同时该方法对条形图和其他有组距的几何对象非常有用。位置调整有以下五种，既可以指定代表它们名称的字符串，也可以直接调用对应的位置调整函数：
 
 ![](note_img/position.png)
 
@@ -449,7 +449,7 @@ p1 / p2
 
 ### 位置标度
 
-每幅图形一定拥有两个位置标度，一个指定水平位置（x标度），另外一个指定竖直位置（y标度）。由于经常需要微调数据的定义域范围．所以也会使用辅助函数`xlim()`,`ylim()`。值得注意的是，默认情况下，位置标度的`limits`会对变量的定义域进行一定程度的扩展，这样就保证了数据与坐标轴不会发生重叠。使用`expand = expansion()`来控制溢出量，`expansion()`函数第一个参数给出的是乘式的溢出量，第二个参数给出的是加式的溢出量。
+每幅图形一定拥有两个位置标度，一个指定水平位置（x标度），另外一个指定竖直位置（y标度）。由于经常需要微调数据的定义域范围．所以也会使用辅助函数`xlim()`,`ylim()`。值得注意的是，默认情况下，位置标度的`limits`会对变量的定义域进行一定程度的扩展，这样就保证了数据与坐标轴不会发生重叠。使用`expand = expansion(mult = 0, add = 0)`来控制溢出量，第一个参数给出的是乘式的溢出量，第二个参数给出的是加式的溢出量。
 
 #### 连续型
 
@@ -617,7 +617,7 @@ scale_colour_brewer(
 )
 ```
 
-##### 手动离散型标度
+### 手动离散型标度
 
 离散型标度`scale_linetype()`，`scale_size_discrete()`和`scale_shape()`基本上没有选项。这些标度仅仅是按一定的顺序将因子的水平映射到一系列取值中。
 
@@ -633,6 +633,146 @@ ggplot(msleep, aes(x = brainwt, y = bodywt)) +
     values = c(carni = 'red', insecti = 'yellow', herbi = 'green', omni = 'blue')) +
   theme_minimal()
 ```
+
+## 分面
+
+分面可以起到切割数据，生成一系列小联号图的作用，每个小图表示不同的数据子集。ggplot2包含两个分面类型：网格型（facet_grid）和封装型（facet_wrap）。使用`facet_grid()`进行二维分面, 生成一个2维的面板网络，面板的行和列通过变量来定义；使用`facet_wrap()`进行一维分面，即先生成一个1维的面板条块，然后再封装到2维中。
+
+![](note_img/分面类型.png)
+
+### 网格封面
+
+```{r}
+
+# facet_grid(
+#   rows = NULL,
+#   cols = NULL,
+#   scales = "fixed",
+#   space = "fixed",
+#   shrink = TRUE,
+#   labeller = "label_value",
+#   as.table = TRUE,
+#   switch = NULL,
+#   drop = TRUE,
+#   margins = FALSE,
+#   facets = deprecated()
+# )
+
+```
+
+其主要参数：
+
+- `rows, cols`: 由`vars()`引用的变量或表达式的集合（vars()里面可以指定单个或多个列），用于定义多面板图的行和列维度的分组。这些变量可以是命名的（名称将传递给labeller函数）。除了使用rows和cols进行指定外，也可以使用公式创建分面，其中行本身位于公式的左侧 (LHS)，列位于右侧 (RHS)。 如果在该维度（无论是行还是列）上不应用分面，那么可以在公式中使用点来表示该维度。
+- `scales`: 所有面板中是否共享刻度的设置。默认值为`fixed`，表示刻度在所有面板中保持一致；`free_x`表示刻度在行（水平）方向上可以变化；`free_y`表示刻度在列（垂直）方向上可以变化；`free`表示刻度在行和列方向上都可以变化。
+- `space`: 一般会和`scales`参数一起使用，默认为`fixed`，如果设置为`free`，每列（行）的宽度（高度）与该列（行）的标度范围成比例。这将使得所有面板的标度比例相同：每个面板中的1cm都映射为相同的数据范围，例如面板a有2个单位的范围，面板b有4个单位的范围，那么三分之一的空间将分配给a，其余的分配给b。也可以设置`free_x`，`free_y`。
+- `switch`: 默认情况下，标签显示在图的上方和右侧。如果设置为`x`，则顶部标签将显示在底部。如果设置为`y`，则右侧标签将显示在左侧。也可以设置为`both`，即两侧的标签都进行调整。
+- `drop`: 如果为TRUE（默认值），将自动删除数据中未使用的因子水平。如果为FALSE，则显示所有因子水平，无论其是否在数据中出现。
+- `margins`: 一个逻辑值或字符向量。如果为TRUE，将为所有分面变量绘制汇总边际，形成列联表形式的边际图（边际图的分组方式与其他面板中的分组方式相同）。也可以传入变量名的字符串。
+
+此外，还有一个参数`labeller`用于修改分面标签的样式。该参数接受函数`labeller()`来进行标签的细节修改。`labeller()`函数使得为不同的因子变量分配不同的标签文字变得容易。标签函数本身可以是一个函数，也可以接受一个**命名**的字符串向量。
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(showtext)
+library(ggtext)
+font_path <- "fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+showtext_auto()
+axis1 <- "<strong>axis x </strong>: hwy<br>"
+axis2 <- "<strong>axis y </strong>: cty"
+subtitle <- str_c(axis1, axis2)
+facet_x <- c("Audi", "Chevrolet", "Dodge")
+names(facet_x) <- c("audi", "chevrolet", "dodge")
+# 为向量命名
+
+slice_head(mpg, n = 50) %>%
+  ggplot(aes(x = hwy, y = cty)) + 
+  geom_point(size = 2, color = "#FC4E07") +
+  facet_grid(
+    cols = vars(manufacturer),
+    rows = vars(drv),
+    scales = "free_y",
+    switch = "both",
+    space = "free", 
+    labeller = labeller(.rows = label_both, .cols = facet_x)
+  ) +
+  labs(title = "ABOUT FACET", subtitle = subtitle) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 25, color = "#FC4E07"), 
+    plot.subtitle = element_markdown(family = "serif", hjust = 0.01, size = 12),
+    panel.border = element_rect(color = "grey60", fill = NA),
+    axis.title = element_blank(),
+    strip.placement = "outside",
+    strip.background = element_rect(fill = "#FC4E07"),
+    strip.text = element_text(color = "white", size = 12),
+    strip.switch.pad.grid = unit(0.3, "cm")
+  )
+
+ggsave(filename = "notes/output_img/facet_plot.png", dpi = 90)
+```
+
+### 封装分面
+
+`facet_wrap()`并不是用两个或者更多的变量来生成一个2维网络，而是先生成以一个长的面板条块（由任意数目的变量生成），然后把它封装在2维中。与facet_grid()相比，这通常更好地利用了屏幕空间，因为大多数显示器的形状是近似矩形的，也更容易展示单变量的分面。
+
+```{r}
+
+# facet_wrap(
+#   facets,
+#   nrow = NULL,
+#   ncol = NULL,
+#   scales = "fixed",
+#   shrink = TRUE,
+#   labeller = "label_value",
+#   as.table = TRUE,
+#   switch = deprecated(),
+#   drop = TRUE,
+#   dir = "h",
+#   strip.position = "top"
+# )
+
+```
+
+主要参数说明：
+
+- `facets`: 用于定义分面组的变量或表达式，通过`vars()`引用。但分面超过两个变量时，要么声明为向量形式`c("a", "b")`，要么通过公式：`~a + b`。
+- `nrow、ncol`: 分面的行数和列数。
+- `strip.position`: 默认情况下，标签显示在图的顶部。可以通过设置`strip.position = c("top", "bottom", "left", "right")`来将标签放置在四个边的任意一个位置。
+- `dir`: 分面的方向，可以是`h`表示水平（默认值），或`v`表示垂直。
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(showtext)
+library(ggtext)
+font_path <- "fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+showtext_auto()
+
+ggplot(economics_long, aes(date, value)) +
+  geom_line() +
+  facet_wrap(
+    facets = vars(variable), 
+    scales = "free", 
+    ncol = 2, 
+    strip.position = "right"
+    ) +
+  labs(title = "ABOUT FACET") +
+  theme_minimal()+
+  theme(
+    text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 25, color = "#FC4E07"), 
+    axis.title = element_blank(),
+    strip.placement = "outside",
+    strip.background = element_rect(fill = "#FC4E07"),
+    strip.text = element_text(color = "white", size = 12),
+    strip.switch.pad.grid = unit(0.3, "cm")
+  )
+```
+
 
 ## 添加额外元素
 

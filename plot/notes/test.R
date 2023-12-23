@@ -156,20 +156,20 @@
 
 # Dodging with various widths -------------------------------------
 # To dodge items with different widths, you need to be explicit
-df <- data.frame(
-  x = c("a","a","b","b"),
-  y = 2:5,
-  g = rep(1:2, 2)
-)
-p <- ggplot(df, aes(x, y, group = g)) +
-  geom_col(position = "dodge", fill = "grey50", colour = "black")
-p
-# # So you must explicitly specify the width
-p + geom_linerange(
-  aes(ymin = y - 1, ymax = y + 1),
-  color = "red",
-  position = position_dodge2(width = 0.9)
-)
+# df <- data.frame(
+#   x = c("a","a","b","b"),
+#   y = 2:5,
+#   g = rep(1:2, 2)
+# )
+# p <- ggplot(df, aes(x, y, group = g)) +
+#   geom_col(position = "dodge", fill = "grey50", colour = "black")
+# p
+# # # So you must explicitly specify the width
+# p + geom_linerange(
+#   aes(ymin = y - 1, ymax = y + 1),
+#   color = "red",
+#   position = position_dodge2(width = 0.9)
+# )
 
 
 
@@ -224,3 +224,26 @@ p + geom_linerange(
 #   geom_bar(position = position_dodge()) +
 #   scale_fill_brewer(palette = "Set1") +
 #   theme_minimal()
+
+# library(tidyverse)
+
+# ggplot(mpg, aes(displ, hwy)) +
+#   geom_point(aes(color = cyl)) +
+#   geom_smooth(method = "lm", se = FALSE) +
+#   facet_grid(rows = vars(cyl), cols = vars(drv), scales = "free", margins = TRUE) +
+#   theme_minimal()
+
+
+library(tidyverse)
+types <- head(unique(pull(mpg, manufacturer)))
+
+mpg %>% filter(manufacturer %in% types) %>% 
+  ggplot(aes(cty, model)) +
+    geom_point(aes(color = manufacturer), size = 2) +
+    scale_color_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(manufacturer), space = "free_y", scales = "free") +
+    theme_minimal() +
+    theme(
+      axis.title.y = element_blank(),
+      panel.background = element_rect(color = "black")
+    )

@@ -1,0 +1,339 @@
+---
+title: 拼接
+jupyter: ir
+---
+
+
+
+## Cowplot
+
+对已经绘制好的图像进行排列组合。
+
+### plot_grid()
+
+其主要参数及其默认值：
+- `nrow` = NULL：决定排列的行数。
+- `ncol` = NULL：决定排列的列数。
+- `rel_widths` = 1：相对列宽的数值向量。例如，对于两列网格，设置rel_widths = c(2, 1)，意味着第一列为2，第二列为1。
+- `rel_heights` = 1：相对行高的数值向量。例如，对于两列网格，设置rel_widths = c(2, 1)，意味着第一行为2，第二行为1。
+- `labels` = NULL: 指定每一个图的标签，一般用向量表示。
+- `label_size` = 14：每一个标签的大小。
+- `label_fontfamily` = NULL：每一个标签的字体类型。
+- `label_fontface` = "bold"：每一个标签字体的样式
+- `label_color` = NULL：每一个标签的颜色。
+- `label_x` = 0：绘图标签x的位置，可以是单个值或者数值向量。对于所有子图来说，所有标签默认为0，即每个标签都一直放置在每个图的左侧。
+- `label_y`= 1：绘图标签y的位置，可以是单个值或者数值向量。对于所有子图来说，所有标签默认为1，即每个标签都一直放置在每个图的顶端。
+- `hjust` = -0.5：调整每个标签的水平位置。更大的负值会进一步移动标签在绘图画布的右侧。可以是单个值（应用于所有标签）或值向量（每个标签一个）。默认值为 -0.5。
+- `vjust` = 1.5：调整每个标签的垂直位置。更大的正值会进一步移动标签在绘图画布的上侧。可以是单个值（应用于所有标签）或值向量（每个标签一个）。默认值为 1.5。
+- `byrow` = TRUE：决定是否按照行来排序子图。
+
+```{r}
+#| vscode: {languageId: r}
+library(cowplot)
+library(ggthemes)
+library(tidyverse)
+library(showtext)
+library(viridis)
+font_add("siyuan", "C:/USERS/LENOVO/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/思源黑体CN-HEAVY.OTF")
+showtext_auto()
+options(repr.plot.width = 10, repr.plot.height = 10)
+
+audi <- filter(mpg, manufacturer == "audi") %>%
+  ggplot(aes(x = hwy, y = cty))+
+    geom_point(size = 3, color = "#008c8c", shape = 21, stroke = 1, fill = "#008c8c", alpha = .4)+
+    theme_fivethirtyeight() +
+    theme(
+      axis.title = element_blank(),
+      axis.text = element_text(size = 16, family = "siyuan")
+    )
+
+dodge <- filter(mpg, manufacturer == "dodge") %>%
+  ggplot(aes(hwy, cty))+
+    geom_point(size = 3, color = "#006699", shape = 21, stroke = 1, fill = "#006699", alpha = .4)+
+    theme_fivethirtyeight()+
+    theme(
+      axis.title = element_text(size = 20, family = "siyuan", hjust = 1),
+      axis.text = element_text(size = 16, family = "siyuan")
+    )    
+
+ford <- filter(mpg, manufacturer == "ford") %>%
+  ggplot(aes(hwy, cty))+
+    geom_point(size = 3, color = "#E25822", shape = 21, stroke = 1, fill = "#E25822", alpha = .4)+
+    theme_fivethirtyeight()+
+    theme(
+      axis.title = element_text(size = 20, family = "siyuan", hjust = 1),
+      axis.title.y = element_blank(),
+      axis.text = element_text(size = 16, family = "siyuan")
+    )
+
+all <- mpg %>%
+  ggplot(aes(hwy, cty))+
+    geom_point(size = 3, color = "red", shape = 21, stroke = 1, fill = "red", alpha = .4)+
+    theme_fivethirtyeight()+
+    theme(
+      axis.title = element_text(size = 20, family = "siyuan", hjust = 1),
+      axis.title.x = element_blank(),
+      axis.text = element_text(size = 16, family = "siyuan")
+    )
+    
+result <- plot_grid(all, audi, dodge, ford,
+            nrow = 2,
+            labels = LETTERS[1:4],
+            label_size = 25,
+            label_x = 0.15,
+            label_fontfamily = "siyuan"
+)
+result
+```
+
+## Patchwork
+
+为什么不试试更加强大的patchwork包呢？（更多细节见官方文档）
+
+```{r}
+#| vscode: {languageId: r}
+library(patchwork)
+```
+
+### plot_arithmetic
+
+patchwork有一些常用的运算符：
+- `|` 运算符可以理解为将图形按行拼接。同时也可以用`+`符号。
+- `/` 运算符可以理解为将图形按列拼接。
+- `()` 决定了嵌套的等级。
+- `*` 运算符只在当前嵌套级别的所有图中添加一个ggplot元素，换句话说，如果不属于这个嵌套级别是不会添加上ggplot元素的。
+- `&` 运算符则可以递归到所有嵌套中以将该元素添加到所有图中。
+
+```{r}
+#| vscode: {languageId: r}
+(dodge | ford) / audi
+dodge | (ford / audi)
+(dodge | (ford / audi)) * theme_bw()
+(dodge | (ford / audi)) & theme_bw()
+```
+
+### plot_annotation()
+
+对最终拼接好的图形进行一些注释的添加，如标题，子标题等等。用“+” 运算符即可添加函数。
+
+- `title, subtitle, caption`：添加注释的种类。
+- `theme`：ggplot中的theme设置仍然可以在这里设置，可以对整体的或个体的主题进行修改。
+
+其他参数可以自行查阅官方文档。
+
+```{r}
+#| vscode: {languageId: r}
+(dodge | ford) / all +
+    plot_annotation(
+        title = "This is a scatter chart",
+        subtitle = "using patchwork package",
+        caption = "by : zhizhifan",
+        theme = theme_fivethirtyeight() + 
+                theme(
+                    plot.title = element_text(size = 40, family = "siyuan"),
+                    plot.subtitle = element_text(size = 25, family = "siyuan"),
+                    plot.caption = element_text(size = 20, family = "siyuan")
+                    )               
+    )
+```
+
+### plot_spacer()
+
+plot_spacer()可以用于创建空白。
+
+```{r}
+#| vscode: {languageId: r}
+(audi + plot_spacer() + dodge) / all & theme_fivethirtyeight()
+```
+
+### plot_layout()
+
+有时除了简单的运算符之外，我们为了更好地控制布局，需要添加布局规范。布局规范本质上是一组指令，用于规定如何在页面上排列绘图。使用嵌套网格时，布局规范的范围限定为当前嵌套级别。
+这意味着布局规范可以有效地调整当前嵌套级别的布局，而不影响其他的嵌套级别。这种范围界定很重要，因为它可以更好地控制绘图的布局，即使在处理复杂的嵌套网格时也是如此。
+
+- `ncol，nrow`：决定排列的行列数。
+- `byrow`：指定绘图在网格中的填充顺序。如果将其设置为 “TRUE”，则绘图将按行优先顺序填充。
+- `widths，heights`：参数分别用于指定网格中每列和每行的相对宽度和高度。有点类似于cowplot中的rel.heights/rel.widths，取值可以是单值或者向量。
+- `guides`：参数用于指定在布局中应如何处理图例的排布问题。如果取值为collect，则可以收集合并同一嵌套等级下的图例。如果取值为keep，则停止在此嵌套等级的图例收集，并将图例放置在图层旁边。此外值得注意的是，如果在收集图例的同时使用theme(legend.xx=...)，这将应用于整个已经收集合并的图例。
+- `design`：该参数用于指定布局中区域的位置，它可以指定为文本字符串，也可以通过将对`area()`的调用连接在一起来手动指定排布位置。
+
+#### area()
+
+area()函数可以指定排布区域的大小。此函数是一个辅助函数，这意味着它用于为绘图指定面积的过程。area()函数可通过c()来进行组合，将多个区域的排布位置都指定好。
+其参数有四个：`t, l, b, r`。其中必须指定`t, l`参数，而`b, l`参数可以不指定，默认为`b = t, r = l`。area()函数将从上至下，从左至右的枚举列数 ，这意味着一个区域的顶部和左侧的位置值应始终分别小于或等于底部和右侧位置值。也可以传入单个字符串来代替数字的表达形式。
+
+```{r}
+#| vscode: {languageId: r}
+layout <- c(
+area(1, 1),
+area(1, 3, 3),
+area(3, 1, 3, 2)
+)
+plot(layout)
+```
+
+```{r}
+#| vscode: {languageId: r}
+honda <- filter(mpg, manufacturer == "honda") %>%
+  ggplot(aes(hwy, cty))+
+    geom_point(size = 3, color = "#e222c2", shape = 21, stroke = 1, fill = "#e222c2", alpha = .4)+
+    theme_fivethirtyeight()+
+    theme(
+      axis.title = element_text(size = 20, family = "siyuan", hjust = 1),
+      axis.title.y = element_blank(),
+      axis.text = element_text(size = 16, family = "siyuan")
+    )
+
+jeep1 <- filter(mpg, manufacturer == "jeep") %>%
+  ggplot(aes(hwy, cty))+
+    geom_point(size = 3, aes(fill = cyl))+
+    scale_fill_viridis_c(option = "magma")+
+    theme_fivethirtyeight()+
+    theme(
+      axis.title = element_text(size = 20, family = "siyuan", hjust = 1),
+      axis.text = element_text(size = 16, family = "siyuan")
+    )+
+    guides(fill = guide_colorsteps(barheight = 10))
+
+jeep2 <- filter(mpg, manufacturer == "jeep") %>%
+  ggplot(aes(hwy, displ))+
+    geom_point(size = 3, aes(fill = cyl))+
+    theme_fivethirtyeight()+
+    scale_fill_viridis_c(option = "magma")+
+    theme(
+      axis.title = element_text(size = 20, family = "siyuan", hjust = 1),
+      axis.text = element_text(size = 16, family = "siyuan")
+    ) +
+    guides(fill = guide_colorsteps(barheight = 10))
+```
+
+```{r}
+#| vscode: {languageId: r}
+((jeep1 + jeep2 + plot_layout(guides = "collect") & 
+    theme(
+        legend.position = "right",
+        legend.direction = "vertical",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 15, family = "siyuan")
+        )
+    ) / all) + plot_layout(heights = c(1, 2))
+```
+
+```{r}
+#| vscode: {languageId: r}
+(dodge + 
+        ford + 
+            audi + 
+                honda + 
+                    plot_layout(nrow = 2)) / 
+                        all + 
+                            plot_layout(heights = c(1, 2))
+```
+
+```{r}
+#| vscode: {languageId: r}
+# plot_layout()中的 design参数与area函数结合进行自行排布
+design <- c(
+  area(1, 1, 1, 2),
+  area(1, 3, 2, 3),
+  area(2, 1, 3, 1),
+  area(3, 2, 3, 3),
+  area(2, 2)
+)
+
+dodge + ford + audi + honda + all + plot_layout(design = design)
+```
+
+# 子图绘制
+
+## geom_plot_npc()
+
+ggpp包的`geom_plot()`可以实现母子图嵌套的效果。函数的常用参数：
+- `mapping`: 参数指定映射内容，主要是坐标x，y以及表格内容label（<span style = 'color:red'><strong>以list列表的形式给出</strong></span>）。
+- `data`：指定参考的数据集。
+- `position`：位置调整参数，可以是一个字符串，也可以是调用位置调整函数后得到的结果。不能与nudge_x或nudge_y同时指定。
+- `nudge_x、nudge_y`：水平和垂直调整表格的偏移量。不能与position同时指定。
+- `add.segments`：逻辑值，是否显示连接原始位置和位移位置（通过`nudge_x、nudge_y`参数指定）之间的线段或箭头（如果两者都可用）。
+- `segment.linewidth`：以毫米为单位，指定线段或箭头的宽度。
+- `arrow`：决定是否在线段上添加指向箭头。通过arrow = arrow()的形式调整箭头的细节样式。
+- `default.color`：一种颜色定义，用于对那些未被颜色美学所定位的元素进行着色。
+- `default.alpha`：用于对那些未被透明度美学定位的元素设置透明度。
+- `...`：其他参数
+  - `vp.width、vp.height`: 参数用于控制嵌入的子图在主图中的宽度和高度。值在0到1之间取值（相对与主图的轴），当值小于1时，子图的宽度会相应缩小。当值为1时，子图将占据与主图相同的宽度，子图会完全覆盖主图的内容。
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(ggpp)
+library(ggpubr)
+library(showtext)
+library(ggsci)
+font_path <- "C:/USERS/LENOVO/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/思源黑体CN-HEAVY.OTF"
+font_add("siyuan", font_path)
+showtext_auto()
+
+
+plot <- ggplot(mtcars, aes(wt, drat, colour = factor(cyl))) +
+  geom_point(size = 3) +
+  scale_color_cosmic()+
+  theme_pubr()+
+  theme(
+    legend.position = "none",
+  )
+df <- tibble(x = 2.5, y = 30, plot = list(plot))
+
+ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point(size = 3) +
+  scale_color_cosmic()+
+  theme_pubr()+
+  theme(
+    panel.grid = element_blank()
+  ) +
+  geom_plot(
+    data = df,
+    aes(x, y, label = plot),
+    nudge_x = 2,
+    nudge_y = -2,
+    hjust = 0.5,
+    vjust = 0.5,
+    add.segments = TRUE,
+    arrow = arrow(length = unit(10, "pt")),
+    default.colour = "black",
+    vp.width = 0.5,
+    vp.height = 0.5
+  )
+```
+
+`geom_plot_npc()`要求映射位置变量为`npcx, npcy`，其余参数有些许变化。
+>geom_plot_npc(
+  mapping = NULL,
+  data = NULL,
+  stat = "identity",
+  position = "identity",
+  ...,
+  na.rm = FALSE,
+  show.legend = FALSE,
+  inherit.aes = FALSE
+)
+
+`annotate()`函数绘制表格，指定`geom = "plot_npc", npcx, npcy, label`等参数即可
+
+# 布局
+
+## UpSetR
+
+## circlize
+
+## geofacet
+
+geofacet包是对facet_wrap()和facet_grid()的扩展，本质上和这两个内置函数还是相同的，只不过geofacet将一系列地理面板排列成网格。但分面的个数必须要和grid中的个数保持一致（先开个坑，后面继续研究）
+
+```{r}
+#| vscode: {languageId: r}
+library(geofacet)
+```
+
+```{r}
+#| vscode: {languageId: r}
+get_grid_names()
+```
