@@ -269,16 +269,18 @@
 
 # p1 / p2 / p3
 
-# library(tidyverse)
-# ggplot(diamonds, aes(x = carat, y = price)) +
-#   geom_point() +
-#   scale_x_log10() +
-#   scale_y_log10() +
-#   theme_minimal()
+library(tidyverse)
+library(scales)
+library(patchwork)
+p1 <- ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal()
 
-# library(tidyverse)
-# library(scales)
-# ggplot(diamonds, aes(x = carat, y = price)) +
-#   geom_point() +
-#   coord_trans(x = exp_trans(10), y = exp_trans(10)) +
-#   theme_minimal()  
+p2 <- ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point() +
+  coord_trans(x = exp_trans(10), y = exp_trans(10)) +
+  theme_minimal() 
+
+p1 / p2

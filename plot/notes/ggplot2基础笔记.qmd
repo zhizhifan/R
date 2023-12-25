@@ -842,6 +842,49 @@ p1 / p2 / p3
 
 ```
 
+```{r}
+library(tidyverse)
+library(scales)
+library(patchwork)
+p1 <- ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  coord_trans(x = "identity", y = "identity") +
+  theme_minimal()
+
+p2 <- ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point() +
+  coord_trans(x = log_trans(10), y = log_trans(10)) +
+  # 转换成对数坐标轴
+  theme_minimal() 
+
+p1 / p2
+```
+
+`coord_trans(x = "identity", y = "identity")`使得坐标系保持标准的线性比例。
+`coord_trans(x = log_trans(10), y = log_trans(10))`通过 coord_trans() 函数直接应用对数变换到整个坐标系上。总的来说，p1 对数据做了标度的转换，然后通过位置标度仍映射到线性坐标轴上，而 p2 则完全按照对数比例来展示数据点和轴刻度。
+
+```{r}
+library(tidyverse)
+library(scales)
+library(patchwork)
+p1 <- ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(method = "lm", se = FALSE) +
+  coord_trans(x = exp_trans(10), y = exp_trans(10)) +
+  theme_minimal()
+
+p2 <- ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
+
+p1 / p2
+# 先利用位置标度改变输入定义域，进行对数处理后的平滑统计变换，然后再变换坐标轴，转换散点图为原有的分布形状
+```
 ### 非笛卡尔坐标系
 
 #### 极坐标系
