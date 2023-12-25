@@ -1,0 +1,97 @@
+---
+title: 笛卡尔坐标系（直角坐标系）
+jupyter: ir
+---
+
+
+
+
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(showtext)
+font_path <-  "C:/USERS/LENOVO/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/思源黑体CN-HEAVY.OTF"
+font_add("siyuan", font_path)
+showtext_auto()
+set.seed(99)
+tibble(
+  cat = LETTERS[1:5],
+  num = rnorm(5, mean = 12, sd = 15)
+) %>%
+  ggplot() +
+  geom_col(aes(x = cat, y = num, fill = cat), position = "dodge2") +
+  labs(title = "Circle Bar Plot") +
+  scale_y_continuous(breaks = seq(0, 30, 3)) +
+  scale_fill_viridis_d(option = "magma", begin = .3, end = .8, alpha = .8) +
+  coord_polar(theta = "y", start = pi/6) +
+  theme_ipsum() +
+  theme(
+    plot.title = element_text(size = 35, face = "bold", family = "siyuan"),
+    panel.grid.major.y = element_blank(), 
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank(),      
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.text.x= element_text(size = 16, family = "siyuan"),
+    legend.title = element_text(size = 20, family = "siyuan"),
+    legend.text = element_text(size = 15, family = "siyuan")
+  ) 
+```
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(showtext)
+font_path <-  "C:/USERS/LENOVO/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/思源黑体CN-HEAVY.OTF"
+font_add("siyuan", font_path)
+showtext_auto()
+set.seed(99)
+tibble(
+    cat = LETTERS[1:12],
+    num = rnorm(12, mean = 12, sd = 4)
+) %>%
+    ggplot() +
+        geom_col(aes(x = cat, y = num, fill = num), position = "dodge2") +
+        geom_hline(aes(yintercept = y), data = data.frame(y = seq(0, 20, 5)), linewidth = 1, color = "lightgrey", alpha = 0.9) +
+        geom_point(aes(x = cat, y= mean(num)), color = "black", size = 5) +
+        geom_segment(aes(
+            x = cat,
+            y = 0,
+            xend = cat,
+            yend = num
+        ), color = "black", linewidth = 1.2, linetype = "dashed") +
+        labs(title = "Circle Bar Plot") +
+        scale_y_continuous(
+            limits = c(-12, 20),
+            breaks = seq(-10, 20, by = 5)
+        ) +
+        theme_ipsum() +
+        theme(
+            plot.title = element_text(size = 35, face = "bold", family = "siyuan"),
+            #plot.margin = margin(15, 30, 15, 15, "pt"),
+            panel.grid.major.y = element_blank(),  
+            panel.grid.minor.x = element_blank(),      
+            axis.title.x = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.y = element_blank(),
+            axis.text.x = element_text(size = 18, face = "bold", family = "siyuan"),
+            legend.position = c(1, 0.5),
+            legend.justification = c(0, 0.5),
+            legend.title = element_text(size = 20, family = "siyuan"),
+            legend.text = element_text(size = 15, family = "siyuan")
+        ) +
+        coord_polar() +
+        guides(
+            fill = guide_colorsteps(
+                title.hjust = 0,
+                barwidth = 1, 
+                barheight = 10)
+                )
+```
+

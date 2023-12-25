@@ -234,16 +234,51 @@
 #   theme_minimal()
 
 
-library(tidyverse)
-types <- head(unique(pull(mpg, manufacturer)))
+# library(tidyverse)
+# types <- head(unique(pull(mpg, manufacturer)))
 
-mpg %>% filter(manufacturer %in% types) %>% 
-  ggplot(aes(cty, model)) +
-    geom_point(aes(color = manufacturer), size = 2) +
-    scale_color_brewer(palette = "Dark2") +
-    facet_grid(rows = vars(manufacturer), space = "free_y", scales = "free") +
-    theme_minimal() +
-    theme(
-      axis.title.y = element_blank(),
-      panel.background = element_rect(color = "black")
-    )
+# mpg %>% filter(manufacturer %in% types) %>% 
+#   ggplot(aes(cty, model)) +
+#     geom_point(aes(color = manufacturer), size = 2) +
+#     scale_color_brewer(palette = "Dark2") +
+#     facet_grid(rows = vars(manufacturer), space = "free_y", scales = "free") +
+#     theme_minimal() +
+#     theme(
+#       axis.title.y = element_blank(),
+#       panel.background = element_rect(color = "black")
+#     )
+
+
+# library(tidyverse)
+# library(patchwork)
+# p1 <- ggplot(mpg, aes(displ, cty)) +
+#   geom_point() +
+#   geom_smooth() +
+#   theme_minimal()
+
+# p2 <- ggplot(mpg, aes(cty, displ)) +
+#   geom_point() +
+#   geom_smooth() +
+#   theme_minimal()
+
+# p3 <- ggplot(mpg, aes(cty, displ)) +
+#   geom_point() +
+#   geom_smooth() +
+#   theme_minimal() +
+#   coord_flip()
+
+# p1 / p2 / p3
+
+# library(tidyverse)
+# ggplot(diamonds, aes(x = carat, y = price)) +
+#   geom_point() +
+#   scale_x_log10() +
+#   scale_y_log10() +
+#   theme_minimal()
+
+# library(tidyverse)
+# library(scales)
+# ggplot(diamonds, aes(x = carat, y = price)) +
+#   geom_point() +
+#   coord_trans(x = exp_trans(10), y = exp_trans(10)) +
+#   theme_minimal()  
