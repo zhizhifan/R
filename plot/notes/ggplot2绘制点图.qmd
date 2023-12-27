@@ -1,0 +1,114 @@
+---
+title: Scatter Chart
+jupyter: ir
+---
+
+
+
+## QQ Plot
+
+>在QQ图（Quantile-Quantile Plot）中，横坐标代表理论分位数（Theoretical Quantiles），纵坐标代表样本分位数（Sample Quantiles）。横坐标上的理论分位数是根据某个假设分布计算得出的，通常是标准正态分布（平均值为0，标准差为1）。这些理论分位数用于构建参考线，帮助我们判断数据是否符合假设分布。纵坐标上的样本分位数是根据实际观测数据计算得出的，用于表示数据在样本中的相对位置。它们的计算方式是将观测值按照大小进行排序，并将排序后的数据转换为相应的百分位数，即样本分位数。通过绘制样本分位数与理论分位数之间的关系，我们可以观察到数据是否在假设分布下呈现出线性的关系。如果数据点大致位于一条直线上，表示数据与假设分布拟合得较好；如果数据点偏离直线，则表示数据不太符合假设分布。
+
+geom_qq()用于绘制qq图中的散点，有以下几个参数：
+- `mapping`：用于指定数据变量与绘图属性的映射，通常使用aes()函数进行设置,且必须要使用`sample`。
+- `data`：数据框，包含需要绘制的数据。
+- `distribution`：用于指定比较的分布函数。通常使用`stats::`引用stats包里面的内置`q..`函数
+  - `stats::qnorm`
+  - `stats::qchisq`
+  - `stats::qt`
+- `dparams`：用于指定分布函数的参数，如果使用内置分布函数，可以直接使用相应的参数名称，如`mean`、`sd`等。
+- `...`：其他传递给geom_qq()的参数。
+
+geom_qq_line()用于绘制qq图中的拟合线,其主要参数和geom_qq()是一致的。
+
+```{r}
+#| vscode: {languageId: r}
+options(repr.plot.height = 10, repr.plot.width = 10)
+```
+
+### Basic
+
+```{r}
+#| vscode: {languageId: r}
+qq <- data.frame(num = rnorm(100))
+library(ggplot2)
+ggplot(data = qq) +
+    geom_qq(aes(sample = num), distribution = stats::qnorm, dparams = list(mean = 0, sd = 1)) +
+    geom_qq_line()
+```
+
+### Customize
+
+```{r}
+#| vscode: {languageId: r}
+library(ggplot2)
+library(hrbrthemes)
+qq <- data.frame(num = rnorm(150, mean = 1, sd = 2))
+ggplot(data = qq) +
+    geom_qq(aes(sample = num), 
+            distribution = stats::qnorm, 
+            dparams = list(mean = 1, sd = 2),
+            color = "#008c8c",
+            size = 3,
+            alpha = .7
+            ) +
+    geom_qq_line(aes(sample = num),
+            distribution = stats::qnorm, 
+            dparams = list(mean = 1, sd = 2),
+            linewidth = 1.5,
+            color = "grey60"
+    ) +
+    labs(title = "QQplot") +
+    theme_ipsum()+
+    theme(
+        plot.title = element_text(size = 40, face = "bold"),
+        axis.text.x = element_text(size = 17),
+        axis.text.y = element_text(size = 17)
+    )            
+```
+
+## Bubble Plot
+
+气泡图是基于二维平面展示三维数据的图像。
+
+```{r}
+#| vscode: {languageId: r}
+library(tidyverse)
+library(ggthemes)
+library(viridis)
+library(showtext)
+
+font_path <- "C:/USERS/LENOVO/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/思源黑体CN-HEAVY.OTF"
+font_add("siyuan", font_path)
+showtext_auto()
+options(repr.plot.width = 10, repr.plot.height = 10)
+
+filter(gapminder::gapminder, year == "2007") %>%
+  select(-year) %>%
+        ggplot() +
+            geom_point(aes(x = gdpPercap, y = lifeExp, size = pop, fill = continent, color = continent), stroke = 1.5, shape = 21, alpha = 0.4) +
+            labs(x = "Gdp per Capita", y = "Life Expectancy", title = "Bubble Plot") +
+            scale_fill_viridis_d(option = "magma", begin = 0.1, end = 0.8) +
+            scale_color_viridis_d(option = "magma", begin = 0.1, end = 0.8) +
+            scale_size(range = c(1, 35), name = "Population (M)") +
+            theme_fivethirtyeight() +
+            theme( 
+                text = element_text(family= "siyuan"),
+                plot.title = element_text(size = 50),
+                axis.title = element_text(size = 25, hjust = 1),
+                axis.text = element_text(size = 15),
+                legend.background = element_rect(fill = NA),
+                legend.key = element_rect(fill = NA),
+                legend.position = c(1, 0.05),
+                legend.justification = c(.9, 0),
+                legend.spacing.x = unit(10, "pt"),
+                legend.direction = "vertical",
+                legend.title = element_blank(),
+                legend.text = element_text(size = 18),
+                legend.key.height = unit(0.5, "inches")
+            ) +
+            guides(size = "none",
+                fill = guide_legend(override.aes = list(size = 8))
+                )
+```
+

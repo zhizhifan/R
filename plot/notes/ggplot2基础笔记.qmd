@@ -337,7 +337,7 @@ ggplot(mtcars, aes(cyl, mpg)) +
 
 #### 结合几何对象和统计变换
 
-将几何对象和不同的统计变换进行组合，可以轻松地绘制出新颖的图形，这在之前的代码中已经有所体现。类似地，ggplot2中有大量的几何对象就是基于其他几何对象衍生出来的（通过修改某个已存在的几何对象地默认图形属性或统计变换）：
+将几何对象和不同的统计变换进行组合，可以轻松地绘制出新颖的图形，这在之前的代码中已经有所体现（一个几何对象对应一个统计变换）。类似地，ggplot2中有大量的几何对象就是基于其他几何对象衍生出来的（通过修改某个已存在的几何对象地默认图形属性或统计变换）：
 
 ![](note_img/combined-goems.png)
 
@@ -794,8 +794,8 @@ ggplot(economics_long, aes(date, value)) +
 ```
 
 - `xlim、ylim`：x轴和y轴的限制范围。与在标度中设置限制范围不一样（任何超出此范围的数据都会被删除），该参数只会展示一小片的图形区域，像放大镜一样相对放大或缩小坐标系。
-- `expand`：如果为TRUE（默认值），则会在限制范围上添加一个小的扩展因子，以确保每个轴上的最值和面板的边界不发生重叠。如果为FALSE，则限制范围将直接取自数据或xlim/ylim的值，最值与面板边界重叠，不发生扩展效果。
-- `clip`：参数确定绘图是否应该被裁剪到绘图面板的范围内。"on"（默认值）表示是，"off"表示否。在大多数情况下，不应更改默认值"on"，因为设置clip = "off"可能会导致意外的结果。它允许数据点绘制在绘图的任意位置，包括在绘图边缘。比如说，如果通过xlim和ylim设置了限制，并且某些数据点超出这些限制，那么这些数据点可能会显示在轴、图例、绘图标题或绘图边缘等位置，进而造成混乱。
+- `expand`：如果为TRUE（默认值），则会在限制范围上添加一个小的扩展因子，以确保每个轴上的最值和面板的边界不发生重叠。如果为FALSE，则限制范围将直接取自数据或`xlim`/`ylim`的值，最值与面板边界重叠，不发生扩展效果。
+- `clip`：参数确定绘图是否应该被裁剪到绘图面板的范围内。`on`（默认值）表示是，`off`表示否。在大多数情况下，不应更改默认值`on`，因为设置`clip = "off"`可能会导致意外的结果。它允许数据点绘制在绘图的任意位置，包括在绘图边缘。比如说，如果通过`xlim`和`ylim`设置了限制，并且某些数据点超出这些限制，那么这些数据点可能会显示在轴、图例、绘图标题或绘图边缘等位置，进而造成混乱。
 
 #### 坐标轴翻转
 
@@ -885,6 +885,7 @@ p2 <- ggplot(diamonds, aes(x = carat, y = price)) +
 p1 / p2
 # 先利用位置标度改变输入定义域，进行对数处理后的平滑统计变换，然后再变换坐标轴，转换散点图为原有的分布形状
 ```
+
 ### 非笛卡尔坐标系
 
 #### 极坐标系
@@ -895,9 +896,11 @@ p1 / p2
 # coord_polar(theta = "x", start = 0, direction = 1, clip = "on")
 ```
 
-- `theta`：参数决定了哪个变量将被映射为角度（默认是x），哪个变量被映射为半径。
+- `theta`：参数决定了哪个变量将被映射为角度（默认是x），哪个变量被映射为半径（默认是y）。
 - `start`：参数是指从12点钟方向开始的偏移量（默认也是从12点钟方向进行偏移的），值以弧度表示。根据direction的值，偏移量可以顺时针或逆时针应用。
 - `direction`：参数决定转换的角度是按顺时针还是逆时针方向表示。1表示顺时针，-1表示逆时针。
+
+## 主题
 
 ## 添加额外元素
 
@@ -1078,12 +1081,53 @@ mpg %>%
 ggsave(filename = "output_img/ggsave_demo.png", plot = last_plot(), dpi = 90)
 ```
 
-# 进阶知识
 
 # 实战
 
+## 数值关系型图表
 
+### 散点图系列
 
+#### 趋势显示的二维散点图
+
+散点图可以提供几个关键信息：
+
+- 变量之间是否存在数量关联趋势（线性还是非线性。
+- 观察是否存在离群值，从而分析这些离群值对建模分析的影响。
+
+##### 残差分析图
+
+```{r}
+library(tidyverse)
+library(broom)
+fit <- lm(cty ~ displ, data = mpg) %>% augment()
+df <- fit %>% 
+  mutate(.abs.resid = abs(.resid))
+
+ggplot(df, aes(x = displ)) +
+  geom_line(aes(y = .fitted), color = "lightgrey", lwd = 1.5) +
+  geom_segment(aes(xend = displ, y = .fitted, yend = cty), alpha = .2) +
+  geom_point(aes(y = .fitted), shape = 1) +
+  geom_point(
+    mapping = aes(
+      y = cty,
+      size = .abs.resid,
+      fill = .abs.resid
+    ),
+    shape = 21,
+    color = "black"
+  ) +
+  scale_fill_gradient(
+    name = "Residual",
+    low = "black",
+    high = "red"
+  ) +
+  theme_minimal() +
+  guides(
+    size = "none"
+  )
+ggsave(filename = "notes/output_img/residual_plot.png", plot = last_plot(), dpi = 90)
+```
 
 ```{r}
 #| vscode: {languageId: r}

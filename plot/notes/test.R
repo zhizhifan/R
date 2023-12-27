@@ -269,18 +269,48 @@
 
 # p1 / p2 / p3
 
+# library(tidyverse)
+# library(scales)
+# library(patchwork)
+# p1 <- ggplot(diamonds, aes(x = carat, y = price)) +
+#   geom_point() +
+#   scale_x_log10() +
+#   scale_y_log10() +
+#   theme_minimal()
+
+# p2 <- ggplot(diamonds, aes(x = carat, y = price)) +
+#   geom_point() +
+#   coord_trans(x = exp_trans(10), y = exp_trans(10)) +
+#   theme_minimal() 
+
+# p1 / p2
+
 library(tidyverse)
-library(scales)
-library(patchwork)
-p1 <- ggplot(diamonds, aes(x = carat, y = price)) +
-  geom_point() +
-  scale_x_log10() +
-  scale_y_log10() +
-  theme_minimal()
+library(broom)
+fit <- lm(cty ~ displ, data = mpg) %>% augment()
+df <- fit %>% 
+  mutate(.abs.resid = abs(.resid))
 
-p2 <- ggplot(diamonds, aes(x = carat, y = price)) +
-  geom_point() +
-  coord_trans(x = exp_trans(10), y = exp_trans(10)) +
-  theme_minimal() 
+ggplot(df, aes(x = displ)) +
+  geom_line(aes(y = .fitted), color = "lightgrey", lwd = 1.5) +
+  geom_segment(aes(xend = displ, y = .fitted, yend = cty), alpha = .2) +
+  geom_point(aes(y = .fitted), shape = 1) +
+  geom_point(
+    mapping = aes(
+      y = cty,
+      size = .abs.resid,
+      fill = .abs.resid
+    ),
+    shape = 21,
+    color = "black"
+  ) +
+  scale_fill_gradient(
+    name = "Residual",
+    low = "black",
+    high = "red"
+  ) +
+  theme_minimal() +
+  guides(
+    size = "none"
+  )
 
-p1 / p2
