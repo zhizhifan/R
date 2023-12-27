@@ -73,42 +73,6 @@ ggplot(data = qq) +
 
 ```{r}
 #| vscode: {languageId: r}
-library(tidyverse)
-library(ggthemes)
-library(viridis)
-library(showtext)
 
-font_path <- "C:/USERS/LENOVO/APPDATA/LOCAL/MICROSOFT/WINDOWS/FONTS/思源黑体CN-HEAVY.OTF"
-font_add("siyuan", font_path)
-showtext_auto()
-options(repr.plot.width = 10, repr.plot.height = 10)
-
-filter(gapminder::gapminder, year == "2007") %>%
-  select(-year) %>%
-        ggplot() +
-            geom_point(aes(x = gdpPercap, y = lifeExp, size = pop, fill = continent, color = continent), stroke = 1.5, shape = 21, alpha = 0.4) +
-            labs(x = "Gdp per Capita", y = "Life Expectancy", title = "Bubble Plot") +
-            scale_fill_viridis_d(option = "magma", begin = 0.1, end = 0.8) +
-            scale_color_viridis_d(option = "magma", begin = 0.1, end = 0.8) +
-            scale_size(range = c(1, 35), name = "Population (M)") +
-            theme_fivethirtyeight() +
-            theme( 
-                text = element_text(family= "siyuan"),
-                plot.title = element_text(size = 50),
-                axis.title = element_text(size = 25, hjust = 1),
-                axis.text = element_text(size = 15),
-                legend.background = element_rect(fill = NA),
-                legend.key = element_rect(fill = NA),
-                legend.position = c(1, 0.05),
-                legend.justification = c(.9, 0),
-                legend.spacing.x = unit(10, "pt"),
-                legend.direction = "vertical",
-                legend.title = element_blank(),
-                legend.text = element_text(size = 18),
-                legend.key.height = unit(0.5, "inches")
-            ) +
-            guides(size = "none",
-                fill = guide_legend(override.aes = list(size = 8))
-                )
 ```
 

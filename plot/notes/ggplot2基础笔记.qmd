@@ -1100,6 +1100,11 @@ ggsave(filename = "output_img/ggsave_demo.png", plot = last_plot(), dpi = 90)
 ```{r}
 library(tidyverse)
 library(broom)
+library(showtext)
+showtext_auto()
+font_path <- "fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
 fit <- lm(cty ~ displ, data = mpg) %>% augment()
 df <- fit %>% 
   mutate(.abs.resid = abs(.resid))
@@ -1123,12 +1128,55 @@ ggplot(df, aes(x = displ)) +
     high = "red"
   ) +
   theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    axis.title = element_text(hjust = 1, size = 15),
+    axis.text = element_text(size = 12)
+  ) +
   guides(
     size = "none"
   )
 ggsave(filename = "notes/output_img/residual_plot.png", plot = last_plot(), dpi = 90)
 ```
 
+
+```{r}
+library(tidyverse)
+library(showtext)
+showtext_auto()
+font_path <- "fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+filter(gapminder::gapminder, year == "2007") %>%
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point(
+        mapping = aes(size = pop, fill = continent, color = continent), stroke = 1.5, 
+        shape = 21,
+        color = "black",
+        alpha = .3
+  ) +
+  labs(
+        x = "Gdp per Capita", 
+        y = "Life Expectancy", 
+        title = "Bubble Plot"
+  ) +
+  scale_fill_viridis_d(option = "magma", begin = 0.1, end = 0.8) +
+  scale_color_viridis_d(option = "magma", begin = 0.1, end = 0.8) +
+  scale_size(range = c(1, 35), name = "Population (M)") +
+  theme_minimal() +
+  theme( 
+        text = element_text(family = "siyuan"),
+        plot.title = element_text(size = 25),
+        axis.title = element_text(size = 15, hjust = 1),
+        axis.text = element_text(size = 12)
+  ) +
+  guides(
+        size = "none",
+        fill = guide_legend(override.aes = list(size = 8))
+  )
+
+ggsave(filename = "notes/output_img/bubble_plot.png", plot = last_plot(), dpi = 90)
+```
 ```{r}
 #| vscode: {languageId: r}
 data <- data[, 2:ncol(data)]
