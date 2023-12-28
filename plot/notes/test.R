@@ -285,32 +285,62 @@
 
 # p1 / p2
 
-library(tidyverse)
-library(broom)
-fit <- lm(cty ~ displ, data = mpg) %>% augment()
-df <- fit %>% 
-  mutate(.abs.resid = abs(.resid))
+# library(tidyverse)
+# library(broom)
+# fit <- lm(cty ~ displ, data = mpg) %>% augment()
+# df <- fit %>% 
+#   mutate(.abs.resid = abs(.resid))
 
-ggplot(df, aes(x = displ)) +
-  geom_line(aes(y = .fitted), color = "lightgrey", lwd = 1.5) +
-  geom_segment(aes(xend = displ, y = .fitted, yend = cty), alpha = .2) +
-  geom_point(aes(y = .fitted), shape = 1) +
-  geom_point(
-    mapping = aes(
-      y = cty,
-      size = .abs.resid,
-      fill = .abs.resid
-    ),
-    shape = 21,
-    color = "black"
-  ) +
-  scale_fill_gradient(
-    name = "Residual",
-    low = "black",
-    high = "red"
-  ) +
-  theme_minimal() +
-  guides(
-    size = "none"
+# ggplot(df, aes(x = displ)) +
+#   geom_line(aes(y = .fitted), color = "lightgrey", lwd = 1.5) +
+#   geom_segment(aes(xend = displ, y = .fitted, yend = cty), alpha = .2) +
+#   geom_point(aes(y = .fitted), shape = 1) +
+#   geom_point(
+#     mapping = aes(
+#       y = cty,
+#       size = .abs.resid,
+#       fill = .abs.resid
+#     ),
+#     shape = 21,
+#     color = "black"
+#   ) +
+#   scale_fill_gradient(
+#     name = "Residual",
+#     low = "black",
+#     high = "red"
+#   ) +
+#   theme_minimal() +
+#   guides(
+#     size = "none"
+#   )
+
+library(tidyverse)
+library(ggridges)
+library(showtext)
+showtext_auto()
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+df <- read_csv(file = "notes/data/Line_Data.csv")
+data <- mutate(df, date = as.Date(date)) %>% 
+  mutate(
+    min_val = map2_dbl(AMZN, AAPL, min),
+    max_val = map2_dbl(AMZN, AAPL, max)
   )
 
+ggplot(data, aes(x = date)) +
+  geom_ridgeline_gradient(
+    aes(y = min_val, height = max_val - min_val,  fill = max_val - min_val)
+  ) +
+  geom_line(aes(y = AMZN), color = "black", lwd = 0.75) +
+  geom_line(aes(y = AAPL), color = "black", lwd = 0.75) +
+  scale_x_date(date_breaks = "1 year") +
+  theme_minimal() +
+  scale_fill_gradientn(colours = brewer.pal(9, "YlGnBu"), name = "Value")+
+  theme(
+    text = element_text(family = "siyuan"),
+    legend.direction = "horizontal",
+    legend.position = c(1, 0.1),
+    legend.justification = c(1, 1),   
+    legend.background = element_blank(),
+  ) 

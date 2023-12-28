@@ -1095,6 +1095,8 @@ ggsave(filename = "output_img/ggsave_demo.png", plot = last_plot(), dpi = 90)
 - 变量之间是否存在数量关联趋势（线性还是非线性。
 - 观察是否存在离群值，从而分析这些离群值对建模分析的影响。
 
+同时可以在散点图中添加回归曲线或平滑曲线。
+
 ##### 残差分析图
 
 ```{r}
@@ -1102,7 +1104,7 @@ library(tidyverse)
 library(broom)
 library(showtext)
 showtext_auto()
-font_path <- "fonts/SiYuanCN-Heavy.otf"
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
 font_add("siyuan", font_path)
 
 fit <- lm(cty ~ displ, data = mpg) %>% augment()
@@ -1122,6 +1124,7 @@ ggplot(df, aes(x = displ)) +
     shape = 21,
     color = "black"
   ) +
+  labs(title = "Residual Analysis Plot") +
   scale_fill_gradient(
     name = "Residual",
     low = "black",
@@ -1130,6 +1133,7 @@ ggplot(df, aes(x = displ)) +
   theme_minimal() +
   theme(
     text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 25),
     axis.title = element_text(hjust = 1, size = 15),
     axis.text = element_text(size = 12)
   ) +
@@ -1139,12 +1143,19 @@ ggplot(df, aes(x = displ)) +
 ggsave(filename = "notes/output_img/residual_plot.png", plot = last_plot(), dpi = 90)
 ```
 
+#### 分布显示的二维散点图
+
+#####  气泡图
+
+气泡图是一种多变量图表，是散点图的变体，但是不同于散点图的是，每个气泡的面积代表第三个维度的数据。气泡图通过气泡的位置及面积大小，可分析数据之间的相关性。
+
+同时为了避免数据的重叠遮挡，一般设置气泡的透明度。
 
 ```{r}
 library(tidyverse)
 library(showtext)
 showtext_auto()
-font_path <- "fonts/SiYuanCN-Heavy.otf"
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
 font_add("siyuan", font_path)
 
 filter(gapminder::gapminder, year == "2007") %>%
@@ -1177,6 +1188,127 @@ filter(gapminder::gapminder, year == "2007") %>%
 
 ggsave(filename = "notes/output_img/bubble_plot.png", plot = last_plot(), dpi = 90)
 ```
+
+### 散点曲线图系列
+
+### 相关系数图系列
+
+#### （带标签的）热力图
+
+我们不仅要关注相关系数的绝对值大小，同时更加看重它们的正负号。因此，相关矩阵的颜色图和一般矩阵的颜色图应该有所区别：即应当选取两种色差较大的颜色序列来展示不同符号的相关系数。例如红色、蓝色分别表示正、负相关系数。
+
+```{r}
+library(tidyverse)
+library(RColorBrewer)
+library(showtext)
+showtext_auto()
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+cor_mat <- round(cor(mtcars, method = "pearson"), 2)
+df <- reshape2::melt(cor_mat)
+col_pal <- brewer.pal(7, "Set1")
+
+ggplot(df, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile(color = "black") +
+  geom_text(size = 4, aes(label = value), color = "white") +
+  labs(title = "Correlation Coefficient Heatmap") +
+  scale_fill_gradient2(low = col_pal[2], high = col_pal[1], mid = "#f7f7f7", na.value = NA) +
+  coord_equal() +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"), 
+    axis.title = element_blank(),
+    axis.text = element_text(size = 12),
+    plot.title = element_text(size = 25),
+  )
+
+ggsave(filename = "notes/output_img/heatmap_plot.png", plot = last_plot(), dpi = 90)
+```
+
+#### 气泡图
+
+气泡图是将一个网格矩阵映射到气泡的面积大小和颜色序列上，同时在上半部分使用气泡图显示相关系数，下半部分使用相关系数数值展示结果，这样可以更加清晰地观察数据。
+
+```{r}
+library(tidyverse)
+library(RColorBrewer)
+library(showtext)
+showtext_auto()
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+cor_mat <- round(cor(mtcars, method = "pearson"), 2)
+df <- reshape2::melt(cor_mat)
+col_pal <- brewer.pal(7, "Set1")
+
+df %>% 
+  mutate(abs_value = abs(value)) %>% 
+  ggplot(aes(x = Var1 , y = Var2)) +
+    geom_point(aes(size = abs_value, fill = value), shape = 21, colour = "black") +
+    scale_fill_gradient2(low = col_pal[2], mid = "white", high = col_pal[1], na.value=NA)+
+    scale_size_area(max_size = 13, guide = FALSE) +
+    theme_minimal() +
+    theme(
+      text = element_text(family = "siyuan"),
+      axis.title = element_blank(),
+      axis.text = element_text(size = 12),
+      legend.position="right"
+    )
+ggsave(filename = "notes/output_img/heatmap_plot.png", plot = last_plot(), dpi = 90)
+```
+
+
+### 时间序列型图表
+
+#### 折线图与面积图系列
+
+折线图用于在连续间隔或时间跨度上显示定量数值，最常用来显示趋势和关系。
+
+在折线图（line chart）中，X轴包括类别型或者序数型变量，分别对应文本坐标轴和序数坐标轴（如日期坐标轴）两种类型；Y轴则为数值型变量。在散点图系列中，曲线图（带直线而没有数据标记的散点图）与折线图的图像显示效果类似。但在曲线图中，**X轴必须为数值格式**，这是两者之间最大的区别。所以，如果X轴变量为数值格式，则应该使用曲线图来显示数据，而不是折线图。
+
+面积图（area graph）又叫区域图，是在折线图的基础之上形成的，它将折线图中的折线与自变量坐标轴之间的区域使用颜色或者纹理填充（填充区域称为“面积”），这样可以更好地突出趋势信息，同时让图表更加美观。但是这种图标一般只适用于数据系列的面积图。多数据系列的面积图由于存在互相遮挡的情况，所以会导致数据表达过于冗余，反而影响数据的清晰表达。
+
+##### 两条折线间的面积图
+
+两条折线之间可以使用面积填充，这样可以很清晰地观察数据之间的差异变化，这种图表只适用于双数据系列的数值差异比较展示。填充颜色可以只选择单色，或者是双色分段填充（当变量一大于变量二时，是一种颜色，反之则是另一种颜色。
+
+```{r}
+library(tidyverse)
+library(ggridges)
+library(showtext)
+showtext_auto()
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+df <- read_csv(file = "notes/data/Line_Data.csv")
+data <- mutate(df, date = as.Date(date)) %>% 
+  mutate(
+    min_val = map2_dbl(AMZN, AAPL, min),
+    max_val = map2_dbl(AMZN, AAPL, max)
+  )
+
+ggplot(data, aes(x = date)) +
+  geom_ridgeline_gradient(
+    aes(y = min_val, height = max_val - min_val,  fill = max_val - min_val)
+  ) +
+  geom_line(aes(y = AMZN), color = "black", lwd = 0.75) +
+  geom_line(aes(y = AAPL), color = "black", lwd = 0.75) +
+  scale_x_date(date_breaks = "1 year") +
+  theme_minimal() +
+  scale_fill_gradientn(colours = brewer.pal(9, "YlGnBu"), name = "Value")+
+  theme(
+    text = element_text(family = "siyuan"),
+    legend.direction = "horizontal",
+    legend.position = c(1, 0.1),
+    legend.justification = c(1, 1),   
+    legend.background = element_blank(),
+  ) 
+```
+
+
+
+
 ```{r}
 #| vscode: {languageId: r}
 data <- data[, 2:ncol(data)]
