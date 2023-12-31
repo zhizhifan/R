@@ -314,33 +314,150 @@
 #     size = "none"
 #   )
 
+# library(tidyverse)
+# library(ggridges)
+# library(showtext)
+# showtext_auto()
+# font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+# font_add("siyuan", font_path)
+
+# df <- read_csv(file = "notes/data/Line_Data.csv")
+# data <- mutate(df, date = as.Date(date)) %>% 
+#   mutate(
+#     min_val = map2_dbl(AMZN, AAPL, min),
+#     max_val = map2_dbl(AMZN, AAPL, max)
+#   )
+
+# ggplot(data, aes(x = date)) +
+#   geom_ridgeline_gradient(
+#     aes(y = min_val, height = max_val - min_val,  fill = max_val - min_val)
+#   ) +
+#   geom_line(aes(y = AMZN), color = "black", lwd = 0.75) +
+#   geom_line(aes(y = AAPL), color = "black", lwd = 0.75) +
+#   scale_x_date(date_breaks = "1 year") +
+#   theme_minimal() +
+#   scale_fill_gradientn(colours = brewer.pal(9, "YlGnBu"), name = "Value")+
+#   theme(
+#     text = element_text(family = "siyuan"),
+#     legend.direction = "horizontal",
+#     legend.position = c(1, 0.1),
+#     legend.justification = c(1, 1),   
+#     legend.background = element_blank(),
+#   ) 
+
+
+# library(tidyverse)
+# library(showtext)
+
+# showtext_auto()
+# font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+# font_add("siyuan", font_path)
+
+# tibble(
+#     cat = LETTERS[1:12],
+#     num = rnorm(12, mean = 12, sd = 4)
+# ) %>%
+#   ggplot() +
+#   geom_col(aes(x = cat, y = num, fill = num), position = "dodge2") +
+#   geom_hline(aes(yintercept = y), data = data.frame(y = seq(0, 20, 5)), linewidth = 1, color = "lightgrey", alpha = 0.9) +
+#   geom_point(aes(x = cat, y= mean(num)), color = "black", size = 5) +
+#   geom_segment(aes(
+#       x = cat,
+#       y = 0,
+#       xend = cat,
+#       yend = num
+#   ), color = "black", linewidth = 1.2, linetype = "dashed") +
+#   labs(title = "Circle Bar Plot") +
+#   scale_y_continuous(
+#       limits = c(-12, 20),
+#       breaks = seq(-10, 20, by = 5)
+#   ) +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(family = "siyuan"),
+#     plot.title = element_text(size = 20),
+#     panel.grid.major.y = element_blank(),  
+#     panel.grid.minor.x = element_blank(),      
+#     axis.title.x = element_blank(),
+#     axis.title.y = element_blank(),
+#     axis.text.y = element_blank(),
+#     axis.text.x = element_text(size = 18, face = "bold", family = "siyuan"),
+#     legend.position = "bottom",
+#     legend.title = element_text(size = 20, family = "siyuan"),
+#     legend.text = element_text(size = 15, family = "siyuan")
+# ) +
+#   coord_polar() +
+#   geom_text(x = 7.5, y = -12.6, label = "This is \na circle \nbar plot", size = 10, family = "siyuan") +    
+#   guides(
+#     fill = guide_colorsteps(
+#         title = "the number of letters", 
+#         title.position = "top", 
+#         title.hjust = .5,
+#         barwidth = 20, 
+#         barheight = 1)
+#   )
+
+# 未完成的南丁格尔玫瑰图
+
+# library(tidyverse)
+# library(showtext)
+
+# showtext_auto()
+# font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+# font_add("siyuan", font_path)
+
+# data <- tibble(
+#   a = fct(c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday", "Sunday")),
+#   b = c(50, 60, 70, 20, 90, 110, 30)
+# )
+
+# angle <- seq(0, 360, length.out = length(data$a))
+
+# ggplot(data) +
+#   geom_bar(
+#     aes(x = a, y = b),
+#     width = 1,
+#     stat = "identity",
+#     colour = "black",
+#     fill = "#F8766D"
+#   ) +
+#   geom_text(aes(x = a, y = b - 8, label = b), color = "white", size = 4) +
+#   geom_vline(xintercept = .5) +
+#   coord_polar(theta = "x", start = 0) +
+#   ylim(c(0, 120)) +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(family = "siyuan"),
+#     axis.title = element_blank(),
+#     axis.line.y = element_line(linewidth = 0.25),
+#     panel.grid.major = element_line(color = "grey50", linewidth = .25),
+#     axis.text.y = element_text(size = 10, color = "black"),
+#     axis.text.x = element_text(size = 10, color = "black", angle = 0)
+#   )
+
 library(tidyverse)
-library(ggridges)
 library(showtext)
+
 showtext_auto()
 font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
 font_add("siyuan", font_path)
 
-df <- read_csv(file = "notes/data/Line_Data.csv")
-data <- mutate(df, date = as.Date(date)) %>% 
-  mutate(
-    min_val = map2_dbl(AMZN, AAPL, min),
-    max_val = map2_dbl(AMZN, AAPL, max)
-  )
+data <- read_csv("notes/data/Population_Pyramid_Data.csv", col_select = -1)
+new_data <- mutate(data, age = fct(age)) %>% 
+  mutate(pop = if_else(gender == "female", -pop, pop))
 
-ggplot(data, aes(x = date)) +
-  geom_ridgeline_gradient(
-    aes(y = min_val, height = max_val - min_val,  fill = max_val - min_val)
-  ) +
-  geom_line(aes(y = AMZN), color = "black", lwd = 0.75) +
-  geom_line(aes(y = AAPL), color = "black", lwd = 0.75) +
-  scale_x_date(date_breaks = "1 year") +
+ggplot(new_data) +
+  geom_col(aes(x = age, y = pop, fill = gender), color = "black", linewidth = 0.25) +
+  geom_hline(yintercept = 0, linewidth = 1) +
+  labs(title = "Diverging bar chart") +
+  scale_y_continuous(limits = c(-400, 400)) +
+  scale_fill_viridis_d(option = "magma", begin = .2, end = .6, alpha = .8) +
+  coord_flip() +
   theme_minimal() +
-  scale_fill_gradientn(colours = brewer.pal(9, "YlGnBu"), name = "Value")+
   theme(
     text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 20, family = "siyuan"),
     legend.direction = "horizontal",
-    legend.position = c(1, 0.1),
-    legend.justification = c(1, 1),   
-    legend.background = element_blank(),
-  ) 
+    legend.position = c(1, 1),
+    legend.justification = c(1, 1)
+  )

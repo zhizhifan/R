@@ -1084,6 +1084,18 @@ ggsave(filename = "output_img/ggsave_demo.png", plot = last_plot(), dpi = 90)
 
 # 实战
 
+## 类别比较型图表
+
+### 南丁格尔玫瑰图
+
+南丁格尔玫瑰图即极坐标下的柱形图，是一种圆形的柱状图，使用**圆弧的半径长短**表示数据的大小（数量的多少）。每个数据类别或间隔在径向图上**划分为相等分段**，每个分段从中心延伸多远（与其所代表的数值成正比）取决于极坐标轴线。因此，从极坐标中心延伸出来的**每一环**可以当作**标尺**使用，用来表示分段大小并代表较高的数值。
+
+南丁格尔玫瑰图会将数据的比例大小放大，所以适合对比大小相等的数值。此外，该图在数据量较多时更能节省绘图空间。如果特殊一点，x轴变量为环状周期型序数（如月份，星期）等，南丁格尔玫瑰图的效果会更好。
+
+单数据系列或多数据系列的南丁格尔玫瑰图都可以绘制：
+
+
+
 ## 数值关系型图表
 
 ### 散点图系列
@@ -1258,10 +1270,42 @@ df %>%
 ggsave(filename = "notes/output_img/heatmap_plot.png", plot = last_plot(), dpi = 90)
 ```
 
+## 数据分布型图表
 
-### 时间序列型图表
+### 金字塔图和镜面图
 
-#### 折线图与面积图系列
+```{r}
+library(tidyverse)
+library(showtext)
+
+showtext_auto()
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+data <- read_csv("notes/data/Population_Pyramid_Data.csv", col_select = -1)
+new_data <- mutate(data, age = fct(age)) %>% 
+  mutate(pop = if_else(gender == "female", -pop, pop))
+
+ggplot(new_data) +
+  geom_col(aes(x = age, y = pop, fill = gender), color = "black", linewidth = 0.25) +
+  geom_hline(yintercept = 0, linewidth = 1) +
+  labs(title = "Diverging bar chart") +
+  scale_y_continuous(limits = c(-400, 400)) +
+  scale_fill_viridis_d(option = "magma", begin = .2, end = .6, alpha = .8) +
+  coord_flip() +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 20, family = "siyuan"),
+    legend.direction = "horizontal",
+    legend.position = c(1, 1),
+    legend.justification = c(1, 1)
+  )
+```
+
+## 时间序列型图表
+
+### 折线图与面积图系列
 
 折线图用于在连续间隔或时间跨度上显示定量数值，最常用来显示趋势和关系。
 
@@ -1269,13 +1313,14 @@ ggsave(filename = "notes/output_img/heatmap_plot.png", plot = last_plot(), dpi =
 
 面积图（area graph）又叫区域图，是在折线图的基础之上形成的，它将折线图中的折线与自变量坐标轴之间的区域使用颜色或者纹理填充（填充区域称为“面积”），这样可以更好地突出趋势信息，同时让图表更加美观。但是这种图标一般只适用于数据系列的面积图。多数据系列的面积图由于存在互相遮挡的情况，所以会导致数据表达过于冗余，反而影响数据的清晰表达。
 
-##### 两条折线间的面积图
+#### 两条折线间的面积图
 
 两条折线之间可以使用面积填充，这样可以很清晰地观察数据之间的差异变化，这种图表只适用于双数据系列的数值差异比较展示。填充颜色可以只选择单色，或者是双色分段填充（当变量一大于变量二时，是一种颜色，反之则是另一种颜色。
 
 ```{r}
 library(tidyverse)
 library(ggridges)
+library(RColorBrewer)
 library(showtext)
 showtext_auto()
 font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
@@ -1294,16 +1339,20 @@ ggplot(data, aes(x = date)) +
   ) +
   geom_line(aes(y = AMZN), color = "black", lwd = 0.75) +
   geom_line(aes(y = AAPL), color = "black", lwd = 0.75) +
+  labs(title = "Fill Area Between Lines") +
   scale_x_date(date_breaks = "1 year") +
+  scale_fill_gradientn(colours = brewer.pal(9, "YlGnBu"), name = "Value") +
   theme_minimal() +
-  scale_fill_gradientn(colours = brewer.pal(9, "YlGnBu"), name = "Value")+
   theme(
     text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 20), 
     legend.direction = "horizontal",
     legend.position = c(1, 0.1),
     legend.justification = c(1, 1),   
     legend.background = element_blank(),
-  ) 
+  )
+
+ggsave(filename = "notes/output_img/line-area chart.png", plot = last_plot(), dpi = 90)
 ```
 
 
