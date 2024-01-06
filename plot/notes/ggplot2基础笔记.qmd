@@ -178,6 +178,39 @@ p1 + p2
 
 ![](note_img/几何对象详解.png)
 
+### 简单介绍
+
+#### geom_polygon()
+
+绘制多边形，即**填充后的路径（path）**。数据框中的每一行代表了多边形的一个顶点，如下所示：
+
+```{r}
+demo <- tibble(
+  x = c(1, 2, 2, 1, 3, 4, 4, 3),
+  y = c(1, 1, 2, 2, 1, 1, 2, 2),
+  group = rep(c("a", "b"), each = 4)
+)
+
+ggplot(demo, aes(x = x, y = y)) +
+  geom_polygon(fill = "white", color = "black") +
+  theme_minimal()
+# 没有指定分组，图形的首尾两点进行了闭合连接
+```
+
+通过多边形可以实现各种有想象创造力的图形，例如我们可以通过该函数绘制分组的柱状图：
+
+```{r}
+demo <- tibble(
+  x = c(1, 2, 2, 1, 3, 4, 4, 3),
+  y = c(1, 1, 2, 2, 1, 1, 2, 2),
+  group = rep(c("a", "b"), each = 4)
+)
+
+ggplot(demo, aes(x = x, y = y, group = group)) +
+  geom_polygon(fill = "white", color = "black") +
+  theme_minimal()
+```
+
 ## 统计变换
 
 对数据进行统计变换，即通常以某种方式对数据信息进行汇总。例如，平滑（smoother）是一个很有用的统计变换，它能在一些限制条件的约束下给定x值时y的平均值。
@@ -1086,6 +1119,10 @@ ggsave(filename = "output_img/ggsave_demo.png", plot = last_plot(), dpi = 90)
 
 ## 类别比较型图表
 
+### 柱形图系列
+
+在柱形图中，**类别型或序数型变量**映射到横轴的位置，数值型变量映射到矩形的高度。柱形图控制柱形的两个重要参数是：“设置系列数据格式”中的“系列重叠”和“分类间距”。“分类间距”控制同一数据系列的柱形宽度，数值范围为[0.0，1.0]；“系列重叠”控制**不同数据系列**之间的距离，数值范围为[-1.0,  1.0]。
+
 ### 南丁格尔玫瑰图
 
 南丁格尔玫瑰图即极坐标下的柱形图，是一种圆形的柱状图，使用**圆弧的半径长短**表示数据的大小（数量的多少）。每个数据类别或间隔在径向图上**划分为相等分段**，每个分段从中心延伸多远（与其所代表的数值成正比）取决于极坐标轴线。因此，从极坐标中心延伸出来的**每一环**可以当作**标尺**使用，用来表示分段大小并代表较高的数值。
@@ -1115,6 +1152,7 @@ ggsave(filename = "output_img/ggsave_demo.png", plot = last_plot(), dpi = 90)
 library(tidyverse)
 library(broom)
 library(showtext)
+
 showtext_auto()
 font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
 font_add("siyuan", font_path)
@@ -1258,11 +1296,13 @@ df %>%
   mutate(abs_value = abs(value)) %>% 
   ggplot(aes(x = Var1 , y = Var2)) +
     geom_point(aes(size = abs_value, fill = value), shape = 21, colour = "black") +
+    labs(title = "Correlation Coefficient Heatmap") +
     scale_fill_gradient2(low = col_pal[2], mid = "white", high = col_pal[1], na.value=NA)+
     scale_size_area(max_size = 13, guide = FALSE) +
     theme_minimal() +
     theme(
       text = element_text(family = "siyuan"),
+      plot.title = element_text(size = 25),
       axis.title = element_blank(),
       axis.text = element_text(size = 12),
       legend.position="right"
@@ -1273,6 +1313,8 @@ ggsave(filename = "notes/output_img/heatmap_plot.png", plot = last_plot(), dpi =
 ## 数据分布型图表
 
 ### 金字塔图和镜面图
+
+金字塔图和镜面图通常显示两个组别分布的差异，它们共用一个x轴。
 
 ```{r}
 library(tidyverse)
@@ -1297,6 +1339,8 @@ ggplot(new_data) +
   theme(
     text = element_text(family = "siyuan"),
     plot.title = element_text(size = 20, family = "siyuan"),
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 12),
     legend.direction = "horizontal",
     legend.position = c(1, 1),
     legend.justification = c(1, 1)
@@ -1322,6 +1366,7 @@ library(tidyverse)
 library(ggridges)
 library(RColorBrewer)
 library(showtext)
+
 showtext_auto()
 font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
 font_add("siyuan", font_path)
@@ -1335,7 +1380,7 @@ data <- mutate(df, date = as.Date(date)) %>%
 
 ggplot(data, aes(x = date)) +
   geom_ridgeline_gradient(
-    aes(y = min_val, height = max_val - min_val,  fill = max_val - min_val)
+    aes(y = min_val, height = max_val - min_val, fill = max_val - min_val)
   ) +
   geom_line(aes(y = AMZN), color = "black", lwd = 0.75) +
   geom_line(aes(y = AAPL), color = "black", lwd = 0.75) +
@@ -1346,6 +1391,8 @@ ggplot(data, aes(x = date)) +
   theme(
     text = element_text(family = "siyuan"),
     plot.title = element_text(size = 20), 
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 12),
     legend.direction = "horizontal",
     legend.position = c(1, 0.1),
     legend.justification = c(1, 1),   
@@ -1355,9 +1402,154 @@ ggplot(data, aes(x = date)) +
 ggsave(filename = "notes/output_img/line-area chart.png", plot = last_plot(), dpi = 90)
 ```
 
+#### 堆积面积图
+
+堆积面积图（stacked area graph）的原理与多数据系列面积图相同，但它能同时显示多个数据系列，**每一个系列的开始点是先前数据系列的结束点**。堆积面积图上的最大面积代表了所有数据量的总和，是一个整体。**各个堆积起来的面积表示各个数据量的大小**，这些堆积起来的面积图在表现**大数据的总量分量的变化情况**时格外有用，所以层叠面积图不适用于表示带有负值的数据集。总的来说，堆积面积图侧重于表现不同时间段（数据区间）的多个分类累加值之间的趋势。
+
+```{r}
+library(tidyverse)
+library(showtext)
+
+showtext_auto()
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+data <- read_csv("notes/data/StackedArea_Data.csv") 
+data <- data %>% mutate(Date = as.Date(Date)) %>% 
+  pivot_longer(
+    cols = -Date,
+    names_to = "Countries",
+    values_to = "Values"
+  )
+
+ggplot(data, aes(x = Date, y = Values)) +
+  geom_area(aes(fill = Countries), alpha = 1, position = "stack", color = "black") +
+  labs(title = "Stacked Plot") +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 25),
+    axis.title = element_text(hjust = 1, size = 13),
+    axis.text = element_text(size = 10)
+  ) 
+
+ggsave(filename = "notes/output_img/stacked_plot.png", plot = last_plot(), dpi = 90)
+```
+
+在堆积面积图的基础之上，将各个面积的因变量的数据加和后的总量进行归一化就形成了百分比堆积面积图。该图并不能反映总量的变化，但是可以清晰地反映每个数值所占百分比随时间或类别变化的趋势线，对于分析各个指标**分量**占比极为有用。所以前者关注更总体的总量趋势变化，后者更关注个体的占比变化。
+
+```{r}
+library(tidyverse)
+library(showtext)
+
+showtext_auto()
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+data <- read_csv("notes/data/StackedArea_Data.csv") 
+data <- data %>% mutate(Date = as.Date(Date)) %>% 
+  pivot_longer(
+    cols = -Date,
+    names_to = "Countries",
+    values_to = "Values"
+  )
+
+ggplot(data, aes(x = Date, y = Values)) +
+  geom_area(aes(fill = Countries), alpha = 1, position = "fill", color = "black") +
+  labs(title = "Stacked Plot") +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 25),
+    axis.title = element_text(hjust = 1, size = 13),
+    axis.text = element_text(size = 10)
+  ) 
+
+ggsave(filename = "notes/output_img/stacked_fill_plot.png", plot = last_plot(), dpi = 90)
+```
 
 
+#### 时间序列螺旋图
 
+```{r}
+library(tidyverse)
+library(readxl)
+library(showtext)
+library(RColorBrewer)
+
+showtext_auto()
+font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+N <- 24
+fillcolor <- brewer.pal(n = 9, name = "Spectral")
+data <- read_xlsx("notes/data/SpiralChart_Data.xlsx")
+
+data <- mutate(data, Date = as.Date(Date), Day = day(Date), Time = hm(Time), Value = as.numeric(Value)) %>% 
+  mutate(Hour = hour(Time) + minute(Time) / 60) %>% 
+  mutate(
+    hour_group = cut(
+      Hour, 
+      breaks = seq(0, 24, 0.5), 
+      include.lowest = TRUE, 
+      right = FALSE,
+      label = seq(0, 23.5, 0.5)
+      )
+    ) %>% 
+  mutate(hour_group = as.numeric(as.character(hour_group))) %>% 
+  mutate(day_order = Day - min(Day)) %>% 
+  mutate(Value2 = Value / max(Value))
+         
+bars_demo <- group_by(data, day_order, hour_group) %>%
+  summarize(MeanTT = mean(Value2)) %>% 
+  mutate(
+    Value = MeanTT * max(data$Value),
+    xmin = hour_group,
+    xmax = lead(xmin, n = 1L, default = max(xmin) + 0.5),
+    ymin = day_order * N + hour_group,
+    ymax = day_order * N + hour_group + MeanTT * N * 1.1
+  )
+
+poly_demo <- bars_demo %>% 
+  rowwise() %>% 
+  reframe(
+    hour = hour_group, 
+    Value = Value, 
+    x = c(xmin, xmax, xmax, xmin),
+    y = c(ymin, ymin + 0.5, ymax + 0.5, ymax)
+  )
+
+ggplot(poly_demo, aes(x = x, y = y, group = interaction(day_order, hour), fill = Value)) +
+  geom_polygon(color = "black") +
+  labs(
+    title = "Spiral Chart",
+    y = "Date"
+  ) +  
+  scale_x_continuous(
+    limits = c(0, 24), 
+    breaks = seq(0, 23, 1), 
+    minor_breaks = 0 : 24,
+    labels = paste0(rep(c(0, 1:11), each = 1), rep(c("AM","PM"), each = 12))
+  ) +
+  scale_y_continuous(
+    limits = c(-12, max(poly_demo$y)), 
+    breaks = seq(N, max(poly_demo$y), N),
+    labels = unique(data$Date) 
+  ) +
+  scale_fill_gradientn(colours = fillcolor)+
+  coord_polar() +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 25),
+    axis.title = element_blank(),
+    axis.text = element_text(size = 10)
+  )
+
+
+```
 ```{r}
 #| vscode: {languageId: r}
 data <- data[, 2:ncol(data)]

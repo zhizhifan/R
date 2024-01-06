@@ -406,8 +406,10 @@
 # font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
 # font_add("siyuan", font_path)
 
+# date <- c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday", "Sunday")
+
 # data <- tibble(
-#   a = fct(c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday", "Sunday")),
+#   a = fct(date),
 #   b = c(50, 60, 70, 20, 90, 110, 30)
 # )
 
@@ -415,10 +417,10 @@
 
 # ggplot(data) +
 #   geom_bar(
-#     aes(x = a, y = b),
+#     mapping = aes(x = a, y = b),
 #     width = 1,
 #     stat = "identity",
-#     colour = "black",
+#     color = "black",
 #     fill = "#F8766D"
 #   ) +
 #   geom_text(aes(x = a, y = b - 8, label = b), color = "white", size = 4) +
@@ -429,35 +431,68 @@
 #   theme(
 #     text = element_text(family = "siyuan"),
 #     axis.title = element_blank(),
-#     axis.line.y = element_line(linewidth = 0.25),
 #     panel.grid.major = element_line(color = "grey50", linewidth = .25),
 #     axis.text.y = element_text(size = 10, color = "black"),
 #     axis.text.x = element_text(size = 10, color = "black", angle = 0)
 #   )
 
+# library(tidyverse)
+# library(showtext)
+
+# showtext_auto()
+# font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+# font_add("siyuan", font_path)
+
+# data <- read_csv("notes/data/Population_Pyramid_Data.csv", col_select = -1)
+# new_data <- mutate(data, age = fct(age)) %>% 
+#   mutate(pop = if_else(gender == "female", -pop, pop))
+
+# ggplot(new_data) +
+#   geom_col(aes(x = age, y = pop, fill = gender), color = "black", linewidth = 0.25) +
+#   geom_hline(yintercept = 0, linewidth = 1) +
+#   labs(title = "Diverging bar chart") +
+#   scale_y_continuous(limits = c(-400, 400)) +
+#   scale_fill_viridis_d(option = "magma", begin = .2, end = .6, alpha = .8) +
+#   coord_flip() +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(family = "siyuan"),
+#     plot.title = element_text(size = 20, family = "siyuan"),
+#     legend.direction = "horizontal",
+#     legend.position = c(1, 1),
+#     legend.justification = c(1, 1)
+#   )
+
+# library(tidyverse)
+# library(showtext)
+
+# showtext_auto()
+# font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
+# font_add("siyuan", font_path)
+
+# data <- read_csv("notes/data/StackedArea_Data.csv") 
+# data <- data %>% mutate(Date = as.Date(Date)) %>% 
+#   pivot_longer(
+#     cols = -Date,
+#     names_to = "Countries",
+#     values_to = "Values"
+#   )
+
+# ggplot(data, aes(x = Date, y = Values)) +
+#   geom_area(aes(fill = Countries), alpha = 1, position = "stack", color = "black") +
+#   labs(title = "Stacked Plot") +
+#   scale_fill_viridis_d() +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(family = "siyuan"),
+#     plot.title = element_text(size = 25),
+#     axis.title = element_text(hjust = 1, size = 13),
+#     axis.text = element_text(size = 10)
+#   ) 
+
+# ggsave(filename = "notes/output_img/stacked_plot.png", plot = last_plot(), dpi = 90)
+
+
 library(tidyverse)
-library(showtext)
-
-showtext_auto()
-font_path <- "notes/fonts/SiYuanCN-Heavy.otf"
-font_add("siyuan", font_path)
-
-data <- read_csv("notes/data/Population_Pyramid_Data.csv", col_select = -1)
-new_data <- mutate(data, age = fct(age)) %>% 
-  mutate(pop = if_else(gender == "female", -pop, pop))
-
-ggplot(new_data) +
-  geom_col(aes(x = age, y = pop, fill = gender), color = "black", linewidth = 0.25) +
-  geom_hline(yintercept = 0, linewidth = 1) +
-  labs(title = "Diverging bar chart") +
-  scale_y_continuous(limits = c(-400, 400)) +
-  scale_fill_viridis_d(option = "magma", begin = .2, end = .6, alpha = .8) +
-  coord_flip() +
-  theme_minimal() +
-  theme(
-    text = element_text(family = "siyuan"),
-    plot.title = element_text(size = 20, family = "siyuan"),
-    legend.direction = "horizontal",
-    legend.position = c(1, 1),
-    legend.justification = c(1, 1)
-  )
+library(readxl)
+data <- read_xlsx("notes/data/SpiralChart_Data.xlsx")
