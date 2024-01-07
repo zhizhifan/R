@@ -493,6 +493,4 @@
 # ggsave(filename = "notes/output_img/stacked_plot.png", plot = last_plot(), dpi = 90)
 
 
-library(tidyverse)
-library(readxl)
-data <- read_xlsx("notes/data/SpiralChart_Data.xlsx")
+
