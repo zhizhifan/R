@@ -492,5 +492,74 @@
 
 # ggsave(filename = "notes/output_img/stacked_plot.png", plot = last_plot(), dpi = 90)
 
+# library(tidyverse)
+# library(SuppDists)
+# findParams <- function(mu, sigma, skew, kurt) {
+#   value <- .C("JohnsonMomentFitR", as.double(mu), as.double(sigma),
+#               as.double(skew), as.double(kurt - 3), gamma = double(1),
+#               delta = double(1), xi = double(1), lambda = double(1),
+#               type = integer(1), PACKAGE = "SuppDists")
+  
+#   list(gamma = value$gamma, delta = value$delta,
+#        xi = value$xi, lambda = value$lambda,
+#        type = c("SN", "SL", "SU", "SB")[value$type])
+# }
+
+# # 均值为3，标准差为1的正态分布
+# n <- rnorm(100,3,1)
+# # Johnson分布的偏斜度2.2和峰度13
+# s <- rJohnson(100, findParams(3, 1, 2., 13.1))
+# # Johnson分布的偏斜度0和峰度20）
+# k <- rJohnson(100, findParams(3, 1, 2.2, 20))
+# # 两个峰的均值μ1，μ2分别为1.89和3.79，σ1 = σ2 =0.31
+# mm <- rnorm(100, rep(c(2, 4), each = 50) * sqrt(0.9), sqrt(0.1))
+
+# mydata <- data.frame(
+#   Class = factor(rep(c("n", "s", "k", "mm"), each = 100),
+#                  c("n", "s", "k", "mm")),
+#   Value = c(n, s, k, mm)
+# )
+
+# write_csv(mydata, "bar_distribution.csv")
 
 
+
+# library(tidyverse)
+# set.seed(100)
+
+# n <- rnorm(100, 3, 1)
+# s <- rnorm(100, 2, 2)
+# k <- rnorm(100, 4, 1)
+# m <- rnorm(100, 5, 3)
+
+# mydata <- data.frame(
+#   Class = factor(rep(c("n", "s", "k", "m"), each = 100),
+#                  c("n", "s", "k", "m")),
+#   Value = c(n, s, k, m)
+# )
+
+# # 写入CSV文件
+# write_csv(mydata, "plot/notes/data/bar_distribution.csv")
+
+
+# library(tidyverse)
+# library(showtext)
+
+# showtext_auto()
+# font_path <- "plot/notes/fonts/SiYuanCN-Heavy.otf"
+# font_add("siyuan", font_path)
+# data <- read.csv("plot/notes/data/bar_distribution.csv")
+
+# ggplot(data, aes(x = Class, y = Value)) +
+#   stat_summary(fun = mean, fun.args = list(mult = 1), geom = "bar", width = .7, color = "black", fill = "white", lwd = 1) +
+#   geom_jitter(aes(fill = Class), position = position_jitter(0.2), shape = 21, size = 3) +
+#   stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", width = .2, lwd = 1) +
+#   labs(title = "Bar Distribution With Jitter Dots") +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(family = "siyuan"),
+#     plot.title = element_text(size = 25), 
+#     axis.text = element_text(size = 10),
+#     axis.title = element_text(size = 12, hjust = 1),
+#     legend.position = "none",
+#   )

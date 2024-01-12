@@ -1,9 +1,3 @@
----
-editor: 
-  markdown: 
-    wrap: 72
----
-
 # 基础知识
 
 ggplot2语法可以划分成以下几个部分：
@@ -75,8 +69,13 @@ p1 + p2
 
 ### 常用图形属性类型
 
-不同的几何对象有不同的图形属性，常见的有： 1. color（colour）：线条颜色
-2. size 3. shape 4. fill：填充颜色 5. group：分组 6. x，y：坐标位置
+不同的几何对象有不同的图形属性，常见的有： 
+1. color（colour）：线条颜色
+2. size 
+3. shape  
+4. fill：填充颜色
+5. group：分组
+6. x，y：坐标位置
 
 ### 分组
 
@@ -307,10 +306,7 @@ ggplot(mtcars, aes(cyl, mpg)) +
 
 ##### 统一的摘要计算函数
 
-`fun.data`参数可以支持更复杂的摘要计算函数，它可以是来自`Hmisc`包中的函数，也可以是自己编写的摘要计算函数。此函数对于每个
-x
-值进行统计摘要的分组计算，且应返回一个包含至少三个变量的数据框：ymin、y
-和 ymax。
+`fun.data`参数可以支持更复杂的摘要计算函数，它可以是来自`Hmisc`包中的函数，也可以是自己编写的摘要计算函数。此函数对于每个`x`值进行统计摘要的分组计算，且应返回一个包含至少三个变量的数据框：`ymin`、`y`和 `ymax`。
 
 对于自编函数：
 
@@ -476,8 +472,7 @@ p1 / p2
 
 2.  `limits`：固定标度的定义域。连续型标度接受一个**长度为2的数值型向量**；离散型标度接受一个**字符型向量**。一旦接受了limits，数据将不再进行任何训练，即任何不在此limits规定的定义域内的值均将被丢弃。这个丢弃过程是在统计量计算之前的，这点值得注意。
 
-3.  `breaks`和`labels`：breaks
-    控制着**显示在坐标轴或图例上的值**，即坐标轴上应该显示哪些刻度线的值，或连续型标度在一个图例中将被如何分段。而labels则指定了断点处显示的标签。设置了labels就必须指定breaks，只有这样才能保证这两个参数的正确匹配。当然也可以只设置breaks而不设置labels。
+3.  `breaks`和`labels`：breaks控制着**显示在坐标轴或图例上的值**，即坐标轴上应该显示哪些刻度线的值，或连续型标度在一个图例中将被如何分段。而labels则指定了断点处显示的标签。设置了labels就必须指定breaks，只有这样才能保证这两个参数的正确匹配。当然也可以只设置breaks而不设置labels。
 
 ### 位置标度
 
@@ -516,9 +511,10 @@ p1 / p2
 
 我们常常在绘制时间序列图时，用到日期和时间。日期和时间值基本上属于连续型，但在标注坐标轴时有特殊的处理方式。如果日期和时间值是其他格式的，则需使用`as.Date()`、`as.POSIXct()`或其他对其进行转换为`date`、`time`或`dttm`类型。
 
-对于日期坐标轴，此标度`scale_x_date()`，`scale_y_date()`本身已经可以很好地选择默认值了，不过也可以进行微调： -
-`date_breaks/date_minor_breaks`：指定日期间隔 -
-`date_labels`：日期标签格式
+对于日期坐标轴，此标度`scale_x_date()`，`scale_y_date()`本身已经可以很好地选择默认值了，不过也可以进行微调：
+
+- `date_breaks/date_minor_breaks`：指定日期间隔 
+- `date_labels`：日期标签格式
 
 还有一些常见的位置标度参数，不再赘述。
 
@@ -670,8 +666,7 @@ ggplot(msleep, aes(x = brainwt, y = bodywt)) +
 
 ## 分面
 
-分面可以起到切割数据，生成一系列小联号图的作用，每个小图表示不同的数据子集。ggplot2包含两个分面类型：网格型（facet_grid）和封装型（facet_wrap）。使用`facet_grid()`进行二维分面,
-生成一个2维的面板网络，面板的行和列通过变量来定义；使用`facet_wrap()`进行一维分面，即先生成一个1维的面板条块，然后再封装到2维中。
+分面可以起到切割数据，生成一系列小联号图的作用，每个小图表示不同的数据子集。ggplot2包含两个分面类型：网格型（facet_grid）和封装型（facet_wrap）。使用`facet_grid()`进行二维分面，生成一个2维的面板网络，面板的行和列通过变量来定义；使用`facet_wrap()`进行一维分面，即先生成一个1维的面板条块，然后再封装到2维中。
 
 ![](note_img/分面类型.png)
 
@@ -910,10 +905,8 @@ p1 / p2
 ```
 
 `coord_trans(x = "identity", y = "identity")`使得坐标系保持标准的线性比例。
-`coord_trans(x = log_trans(10), y = log_trans(10))`通过 coord_trans()
-函数直接应用对数变换到整个坐标系上。总的来说，p1
-对数据做了标度的转换，然后通过位置标度仍映射到线性坐标轴上，而 p2
-则完全按照对数比例来展示数据点和轴刻度。
+
+`coord_trans(x = log_trans(10), y = log_trans(10))`通过 coord_trans()函数直接应用对数变换到整个坐标系上。总的来说，p1对数据做了标度的转换，然后通过位置标度仍映射到线性坐标轴上，而 p2则完全按照对数比例来展示数据点和轴刻度。
 
 ```{r}
 library(tidyverse)
@@ -997,8 +990,7 @@ geom_segment都可以使用arrow参数在线上放置箭头,用arrow()函数绘�
 -   ends: 箭头的位置，可取值为 "last"（默认，箭头在线段终点处）或
     "first"（箭头在线段起点处）。
 
--   type: 箭头的类型，可取值为 "open"（默认，空心箭头）或
-    "closed"（实心箭头）。
+-   type: 箭头的类型，可取值为 "open"（默认，空心箭头）或"closed"（实心箭头）。
 
 -   angle: 箭头的夹角，以度数为单位，默认为 30 度。
 
@@ -1026,10 +1018,8 @@ label)皆由标度的断点(break)决定。要绘制图例，图形必须收集�
 
 1.  图例的位置和对齐
 
-使用`theme(legend.position = )`设置。其值可为`right`, `left`, `top`,
-`bottom`,
-`none (不加图例)`。或者是一个表示位置的数值。这个数值型位置由`legend.justification`给定的相对边角位置表示（取0，1之间的值），它是一个长度为2的数值型向量：右上角为c(1，1)
-, 左下角为c(0, 0)。可以自行调整，如：
+使用`theme(legend.position = )`设置。其值可为`right`, `left`, `top`,`bottom`,
+`none (不加图例)`。或者是一个表示位置的数值。这个数值型位置由`legend.justification`给定的相对边角位置表示（取0，1之间的值），它是一个长度为2的数值型向量：右上角为c(1，1), 左下角为c(0, 0)。可以自行调整，如：
 
 ``` r
 theme(legend.position = c(0.9, 0.9))
@@ -1212,6 +1202,8 @@ ggplot(df, aes(x = displ)) +
 
 #### 分布显示的二维散点图
 
+#### 分布显示的二维散点图
+
 ##### 气泡图
 
 气泡图是一种多变量图表，是散点图的变体，但是不同于散点图的是，每个气泡的面积代表第三个维度的数据。气泡图通过气泡的位置及面积大小，可分析数据之间的相关性。
@@ -1305,6 +1297,7 @@ ggplot(df, aes(x = Var1, y = Var2, fill = value)) +
 library(tidyverse)
 library(RColorBrewer)
 library(showtext)
+
 showtext_auto()
 font_path <- "plot/notes/fonts/SiYuanCN-Heavy.otf"
 font_add("siyuan", font_path)
@@ -1318,7 +1311,7 @@ df %>%
   ggplot(aes(x = Var1 , y = Var2)) +
     geom_point(aes(size = abs_value, fill = value), shape = 21, colour = "black") +
     labs(title = "Correlation Coefficient Heatmap") +
-    scale_fill_gradient2(low = col_pal[2], mid = "white", high = col_pal[1], na.value=NA)+
+    scale_fill_gradient2(low = col_pal[2], mid = "white", high = col_pal[1], na.value = NA) +
     scale_size_area(max_size = 13, guide = "none") +
     theme_minimal() +
     theme(
@@ -1375,17 +1368,46 @@ ggplot(new_data) +
 
 ![](output_img/diverging_bar_chart.png)
 
+### 柱形分布图系列
+
+带误差线的柱形图就是使用**每个类别的均值**作为柱形的高度，再根据每个类别的**标准差**绘制误差线，但这种图无法显示数据的分布情况。所以在带误差线的柱形图的基础上添加抖动散点图（jitter chart）可以方便观察数据的分布规律。前面提过，抖动散点图就是每个类别数据点的Y轴数值保持不变，然后数据点X轴数值沿着X轴类别标签中心线在一定范围内随机生成，绘制成散点图。这在一定程度上表示出了局部分布，比如可以看出哪个Y值的对应散点数更多。
+
+```{r}
+library(tidyverse)
+library(showtext)
+
+showtext_auto()
+font_path <- "plot/notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+data <- read.csv("plot/notes/data/bar_distribution.csv")
+
+ggplot(data, aes(x = Class, y = Value)) +
+  stat_summary(fun = mean, fun.args = list(mult = 1), geom = "bar", width = .7, color = "black", fill = "white", lwd = 1) +
+  geom_jitter(aes(fill = Class), position = position_jitter(0.2), shape = 21, size = 3) +
+  stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", width = .2, lwd = 1) +
+  labs(title = "Bar Distribution With Jitter Dots") +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 25), 
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 12, hjust = 1),
+    legend.position = "none",
+  )
+# ggsave(filename = "plot/notes/output_img/bar_distribution.png", plot = last_plot(), dpi = 90)
+```
+
+![](output_img/bar_distribution.png)
+
 ## 时间序列型图表
 
 ### 折线图与面积图系列
 
 折线图用于在连续间隔或时间跨度上显示定量数值，最常用来显示趋势和关系。
 
-在折线图（line
-chart）中，X轴包括类别型或者序数型变量，分别对应文本坐标轴和序数坐标轴（如日期坐标轴）两种类型；Y轴则为数值型变量。在散点图系列中，曲线图（带直线而没有数据标记的散点图）与折线图的图像显示效果类似。但在曲线图中，**X轴必须为数值格式**，这是两者之间最大的区别。所以，如果X轴变量为数值格式，则应该使用曲线图来显示数据，而不是折线图。
+在折线图（line chart）中，X轴包括类别型或者序数型变量，分别对应文本坐标轴和序数坐标轴（如日期坐标轴）两种类型；Y轴则为数值型变量。在散点图系列中，曲线图（带直线而没有数据标记的散点图）与折线图的图像显示效果类似。但在曲线图中，**X轴必须为数值格式**，这是两者之间最大的区别。所以，如果X轴变量为数值格式，则应该使用曲线图来显示数据，而不是折线图。
 
-面积图（area
-graph）又叫区域图，是在折线图的基础之上形成的，它将折线图中的折线与自变量坐标轴之间的区域使用颜色或者纹理填充（填充区域称为"面积"），这样可以更好地突出趋势信息，同时让图表更加美观。但是这种图标一般只适用于数据系列的面积图。多数据系列的面积图由于存在互相遮挡的情况，所以会导致数据表达过于冗余，反而影响数据的清晰表达。
+面积图（area graph）又叫区域图，是在折线图的基础之上形成的，它将折线图中的折线与自变量坐标轴之间的区域使用颜色或者纹理填充（填充区域称为"面积"），这样可以更好地突出趋势信息，同时让图表更加美观。但是这种图标一般只适用于数据系列的面积图。多数据系列的面积图由于存在互相遮挡的情况，所以会导致数据表达过于冗余，反而影响数据的清晰表达。
 
 #### 两条折线间的面积图
 
@@ -1588,6 +1610,11 @@ ggsave("plot/notes/output_img/spiral_chart.png", plot = last_plot(), dpi = 90)
 ```
 
 ![](output_img/spiral_chart.png)
+
+## 局部整体型图表
+
+### 圆环图
+
 
 ## 高维数据可视化
 
