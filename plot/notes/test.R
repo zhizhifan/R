@@ -563,3 +563,29 @@
 #     axis.title = element_text(size = 12, hjust = 1),
 #     legend.position = "none",
 #   )
+
+
+# library(tidyverse)
+# library(showtext)
+
+# showtext_auto()
+# font_path <- "plot/notes/fonts/SiYuanCN-Heavy.otf"
+# font_add("siyuan", font_path)
+
+# data <- read.csv("plot/notes/data/DotPlots_Data.csv")
+# data <- data %>% pivot_longer(cols = where(is.numeric), names_to = "Sex", values_to = "Value")
+
+# ggplot(data, aes(x = Value, y = City)) +
+#   geom_line(aes(group = City)) +
+#   geom_point(aes(fill = Sex), color = "black", shape = 21, size = 3) +
+#   labs(title = "Dumbbell plot") +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(family = "siyuan"),
+#     plot.title = element_text(size = 25),
+#     axis.title = element_text(hjust = 1, size = 12),
+#     axis.text = element_text(size = 10)
+#   )
+
+# ggsave(filename = "plot/notes/output_img/dumbbell_plot.png", plot = last_plot(), dpi = 90)
+

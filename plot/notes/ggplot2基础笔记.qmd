@@ -1130,6 +1130,38 @@ mpg %>%
 在柱形图中，**类别型或序数型变量**映射到横轴的位置，数值型变量映射到矩形的高度。柱形图控制柱形的两个重要参数是："设置系列数据格式"中的"系列重叠"和"分类间距"。"分类间距"控制同一数据系列的柱形宽度，数值范围为\[0.0，1.0\]；"系列重叠"控制**不同数据系列**之间的距离，数值范围为\[-1.0,
 1.0\]。
 
+### 克利夫兰点图
+
+克利夫兰点图大致有三种不同的类型（棒棒糖图、克利夫兰点图、哑铃图），但三者基本类似，故归纳成同一类别。棒棒糖图（lollipop chart）传达了与柱形图或者条形图相同的信息，只是将矩形转变成线条，这样可减少展示空间，重点放在数据点上，从而看起来更加简洁、美观。克利夫兰点图（Cleveland's dot plot）：也就是我们常用的滑珠散点图，非常类似棒棒糖图，只是没有连接的线条，重点强调数据的排序展示及互相之间的差距。哑铃图（dumbbell plot）：可以看成多数据系列的克利夫兰点图，只是使用直线连接了两个数据系列的数据点。哑铃图主要用于：1、展示在同一时间段两个数据点的相对位置（增加或者减少）；2、比较两个类别之间的数据值差别。
+
+```{r}
+library(tidyverse)
+library(showtext)
+
+showtext_auto()
+font_path <- "plot/notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+data <- read.csv("plot/notes/data/DotPlots_Data.csv")
+data <- data %>% pivot_longer(cols = where(is.numeric), names_to = "Sex", values_to = "Value")
+
+ggplot(data, aes(x = Value, y = City)) +
+  geom_line(aes(group = City)) +
+  geom_point(aes(fill = Sex), color = "black", shape = 21, size = 3) +
+  labs(title = "Dumbbell plot") +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    plot.title = element_text(size = 25),
+    axis.title = element_text(hjust = 1, size = 12),
+    axis.text = element_text(size = 10)
+  )
+
+# ggsave(filename = "plot/notes/output_img/dumbbell_plot.png", plot = last_plot(), dpi = 90)
+```
+
+![](output_img/dumbbell_plot.png)
+
 ### 南丁格尔玫瑰图
 
 南丁格尔玫瑰图即极坐标下的柱形图，是一种圆形的柱状图，使用**圆弧的半径长短**表示数据的大小（数量的多少）。每个数据类别或间隔在径向图上**划分为相等分段**，每个分段从中心延伸多远（与其所代表的数值成正比）取决于极坐标轴线。因此，从极坐标中心延伸出来的**每一环**可以当作**标尺**使用，用来表示分段大小并代表较高的数值。
@@ -1382,7 +1414,7 @@ font_add("siyuan", font_path)
 data <- read.csv("plot/notes/data/bar_distribution.csv")
 
 ggplot(data, aes(x = Class, y = Value)) +
-  stat_summary(fun = mean, fun.args = list(mult = 1), geom = "bar", width = .7, color = "black", fill = "white", lwd = 1) +
+  stat_summary(fun = mean, fun.args = list(mult = 1), geom = "bar", width = .6, color = "black", fill = "white", lwd = 1) +
   geom_jitter(aes(fill = Class), position = position_jitter(0.2), shape = 21, size = 3) +
   stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), geom = "errorbar", width = .2, lwd = 1) +
   labs(title = "Bar Distribution With Jitter Dots") +

@@ -1,9 +1,3 @@
----
-title: Scatter Chart
-jupyter: ir
----
-
-
 
 ## QQ Plot
 
@@ -65,14 +59,5 @@ ggplot(data = qq) +
         axis.text.x = element_text(size = 17),
         axis.text.y = element_text(size = 17)
     )            
-```
-
-## Bubble Plot
-
-气泡图是基于二维平面展示三维数据的图像。
-
-```{r}
-#| vscode: {languageId: r}
-
 ```
 
