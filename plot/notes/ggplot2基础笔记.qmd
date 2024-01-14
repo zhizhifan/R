@@ -1561,7 +1561,45 @@ ggplot(data, aes(x = Date, y = Values)) +
 
 ![](output_img/stacked_fill_plot.png)
 
-#### 时间序列螺旋图
+### 日历图
+
+以年为单位的日历图可以通过`ggTimeSeries`包中的`stat_calendar_heatmap()`函数结合ggplot2图层（注意：映射mapping只支持 date 和 fill 变量）绘制。其中横坐标为月份（每一个板块为一个月），纵坐标表示天数。对于横跨多年的日度数据，我们可以通过分面展示。绘图的关键是使用`as.integer(strftime())`日期型处理组合函数获取某天对应所在的年份、月份、周数等数据信息（或者使用lubridate包处理）。
+
+```{r}
+library(tidyverse)
+library(ggTimeSeries)
+library(RColorBrewer)
+library(showtext)
+
+showtext_auto()
+font_path <- "plot/notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+data <- read_csv("plot/notes/data/Calendar_chart_Data.csv")
+MonthLabels <- data %>% group_by(month) %>% summarise(mean_week = mean(week))
+MonthLabels$month_labels <- month.abb[1:12]
+
+days <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+colormap <- brewer.pal(10, "RdYlBu")
+
+ggplot(data, aes(date = date, fill = ValueCol)) +
+  stat_calendar_heatmap() +
+  facet_wrap(facets = "Year", nrow = 4, strip.position = "right") +
+  scale_x_continuous(breaks = MonthLabels$mean_week, labels = MonthLabels$month_labels) +
+  scale_y_continuous(breaks = seq(7, 1, by = -1), labels = days) +
+  scale_fill_gradientn(colours = colormap) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    strip.text = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
+
+# ggsave("plot/notes/output_img/calendar_chart.png", plot = last_plot(), dpi = 90)
+```
+### 时间序列螺旋图
+
+![](output_img/calendar_chart.png)
 
 ```{r}
 library(tidyverse)
@@ -1638,7 +1676,7 @@ ggplot(poly_demo, aes(x = x, y = y, group = interaction(day_order, hour), fill =
     axis.text = element_text(size = 10)
   )
 
-ggsave("plot/notes/output_img/spiral_chart.png", plot = last_plot(), dpi = 90)
+# ggsave("plot/notes/output_img/spiral_chart.png", plot = last_plot(), dpi = 90)
 ```
 
 ![](output_img/spiral_chart.png)

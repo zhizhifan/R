@@ -589,3 +589,49 @@
 
 # ggsave(filename = "plot/notes/output_img/dumbbell_plot.png", plot = last_plot(), dpi = 90)
 
+# library(data.table)
+# set.seed(1234)
+# dat <- data.table(
+#   date = seq(as.Date("1/01/2014", "%d/%m/%Y"),as.Date("31/12/2017", "%d/%m/%Y"),"days"),
+#   ValueCol = runif(1461)
+# )
+# dat[, ValueCol := ValueCol + (strftime(date,"%u") %in% c(6,7) * runif(1) * 0.75), .I]
+# dat[, ValueCol := ValueCol + (abs(as.numeric(strftime(date,"%m")) - 6.5)) * runif(1) * 0.75, .I]
+
+# dat$Year<- as.integer(strftime(dat$date, '%Y'))   #年份
+# dat$month <- as.integer(strftime(dat$date, '%m')) #月份
+# dat$week<- as.integer(strftime(dat$date, '%W'))   #周数
+
+# MonthLabels <- dat[,list(meanWkofYr = mean(week)), by = c('month') ]
+# MonthLabels$month <-month.abb[MonthLabels$month]
+
+# write_csv(dat, "plot/notes/data/Calendar_chart_Data.csv")
+
+library(tidyverse)
+library(ggTimeSeries)
+library(RColorBrewer)
+library(showtext)
+
+showtext_auto()
+font_path <- "plot/notes/fonts/SiYuanCN-Heavy.otf"
+font_add("siyuan", font_path)
+
+data <- read_csv("plot/notes/data/Calendar_chart_Data.csv")
+MonthLabels <- data %>% group_by(month) %>% summarise(mean_week = mean(week))
+MonthLabels$month_labels <- month.abb[1:12]
+
+days <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+colormap <- brewer.pal(10, "RdYlBu")
+
+ggplot(data, aes(date = date, fill = ValueCol)) +
+  stat_calendar_heatmap() +
+  facet_wrap(facets = "Year", nrow = 4, strip.position = "right") +
+  scale_x_continuous(breaks = MonthLabels$mean_week, labels = MonthLabels$month_labels) +
+  scale_y_continuous(breaks = seq(7, 1, by = -1), labels = days) +
+  scale_fill_gradientn(colours = colormap) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "siyuan"),
+    strip.text = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
